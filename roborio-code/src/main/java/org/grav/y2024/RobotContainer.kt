@@ -42,11 +42,6 @@ object RobotContainer {
         val rotationInput = driver.rightStickX deadBand 0.05 signPow drivePow times rotationRate
 
 
-        val shooterUpper = BrushlessCANSparkMax(20)
-        BrushlessCANSparkMax(20).follow(shooterUpper)
-
-        val dc = driveCommand { ChassisSpeeds(forwardInput(), sideInput(), rotationInput()) }
-
         sim()//can u try simulating to see if it works? //I think it literally just need this im not sure tho
 
 
