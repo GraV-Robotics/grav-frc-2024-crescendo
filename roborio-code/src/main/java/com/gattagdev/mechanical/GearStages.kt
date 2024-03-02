@@ -2,7 +2,7 @@ package com.gattagdev.mechanical
 
 import com.gattagdev.units.percent
 
-fun GearSystemBuilder.simpleGears(vararg gearTeeth: Int, name: String = "Simple Gears"){
+fun GearSystemBuilder.meshedGears(vararg gearTeeth: Int, name: String = "Simple Gears"){
     add(GearSystem(name = name){
         val iter = gearTeeth.iterator()
         var prev = iter.next()
@@ -20,6 +20,25 @@ fun GearSystemBuilder.simpleGears(vararg gearTeeth: Int, name: String = "Simple 
     })
 }
 
+internal fun GearSystemBuilder.chainLikeSystem(
+    inputCount: Double,
+    outputCount: Double,
+    name: String
+){
+    add(GearStage(
+        ratio = outputCount.toDouble()/inputCount,
+        name = name
+    ))
+}
+
+fun GearSystemBuilder.chain(
+    inputSprocket: Int,
+    outputSprocket: Int,
+    name: String = "Simple Chain"
+){
+    this.chainLikeSystem(inputSprocket.toDouble(), outputSprocket.toDouble(), name)
+}
+
 
 fun GearSystemBuilder.inverter(name: String = "Inverter"){
     add(GearStage(
@@ -29,7 +48,7 @@ fun GearSystemBuilder.inverter(name: String = "Inverter"){
     ))
 }
 
-
+// ------------------------------ REV ROBOTICS ------------------------------
 fun GearSystemBuilder.ultraPlanetary(vararg ratios: Int, name: String = "UltraPlanetary System"): Unit {
     add(GearSystem(name = name){
         ratios.forEach {
@@ -102,6 +121,7 @@ val MAX_PLANETARY_HEX_OUTPUT = GearStage(
     name = "MaxPlanetary Hex Output"
 )
 
+// ------------------------------ VEX ROBOTICS ------------------------------
 
 fun GearSystemBuilder.versaPlanetary(vararg ratios: Int): Unit {
     add(GearSystem(name = "VersaPlanetary System"){

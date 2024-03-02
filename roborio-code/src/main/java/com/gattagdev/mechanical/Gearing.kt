@@ -1,15 +1,7 @@
 package com.gattagdev.mechanical
 
-//import com.gattagdev.mechanical.RevGearStages.maxPlanetary
-//import com.gattagdev.mechanical.RevGearStages.ultraPlanetary
 import kotlin.math.min
 import kotlin.reflect.KProperty0
-
-
-fun test(){
-    GearSystem{
-    }
-}
 
 
 
@@ -130,6 +122,7 @@ class GearSystemImpl(stages: Iterable<GearStage>, override val name: String = "U
 
 interface GearSystemBuilder{
     fun add(gearStage: GearStage)
+    operator fun GearStage.unaryPlus() = add(this)
 }
 
 fun gearSystem(builder: GearSystemBuilder.() -> Unit, name: String = "Unnamed System"): GearSystem {

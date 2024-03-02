@@ -1,27 +1,90 @@
 package org.grav.y2024
 
-import com.gattagdev.defered.axis
-import com.gattagdev.defered.deadBand
-import com.gattagdev.defered.times
-import com.gattagdev.defered.unaryMinus
-import edu.wpi.first.wpilibj.Joystick
-import edu.wpi.first.wpilibj2.command.Command
-import org.grav.y2024.commands.NormalDriveCommand
+import com.gattagdev.defered.*
+import com.gattagdev.joystick.BetterXboxController
+import com.gattagdev.misc.*
+import com.gattagdev.newcommands.*
+import com.gattagdev.units.inches
+import edu.wpi.first.math.kinematics.ChassisSpeeds
+import org.grav.y2024.subsystems.ClimberSubsystem
+import org.grav.y2024.subsystems.DriveSubsystem
+import org.grav.y2024.subsystems.DriveSubsystem.driveCommand
+import org.grav.y2024.subsystems.DriveSubsystem.sim
+import org.grav.y2024.subsystems.FlywheelSubsystem.ampCommand
+import org.grav.y2024.subsystems.FlywheelSubsystem.speakerCommand
+import org.grav.y2024.subsystems.FlywheelSubsystem.waitForSetpointCommand
+import org.grav.y2024.subsystems.IntakeSubsystem
+import org.grav.y2024.subsystems.TriggerSubsystem.shootCommand
 
 object RobotContainer {
 
-    init {
-        configureBindings()
-    }
+    init { eventLoopContext {
 
-    private fun configureBindings() {
 
-        val driverJoystick = Joystick(0)
+        val driver = BetterXboxController(0)
+        val manipulator = BetterXboxController(1)
 
-    }
+        val intakeInput = manipulator.leftTrigger gt 0.5
+        val shootInput = manipulator.rightTrigger gt 0.5
+        val speakerSpin = manipulator.aButton
+        val ampSpin = manipulator.yButton
 
-    fun getAutonomousCommand(): Command? {
-        // TODO: Implement properly
-        return null
-    }
+        val extendInput = manipulator.leftBumper
+        val retractInput = manipulator.rightBumper
+
+        val driveSpeed = (manipulator.rightTrigger gt 0.5).toDouble(1.0, 0.5) times DriveSubsystem.maxSpeed
+        val rotationRate = { DriveSubsystem.maxRotationRate }
+
+        val drivePow = { 2.0 }
+
+        val forwardInput = driver.leftStickY deadBand 0.05 signPow drivePow times driveSpeed
+        val sideInput = driver.leftStickX deadBand 0.05 signPow drivePow times driveSpeed
+        val rotationInput = driver.rightStickX deadBand 0.05 signPow drivePow times rotationRate
+
+
+        val shooterUpper = BrushlessCANSparkMax(20)
+        BrushlessCANSparkMax(20).follow(shooterUpper)
+
+        val dc = driveCommand { ChassisSpeeds(forwardInput(), sideInput(), rotationInput()) }
+
+        sim()//can u try simulating to see if it works? //I think it literally just need this im not sure tho
+
+
+        /* -------------------- TELEOP -------------------- */
+        TELEOPERATED {
+            driveCommand { ChassisSpeeds(forwardInput(), sideInput(), rotationInput()) } whileTrue always
+
+
+            intakeInput {
+                IntakeSubsystem.intakeCommand() whileTrue always
+            }
+
+
+            shootInput {
+                waitForSetpointCommand() + shootCommand() whileTrue always
+            }
+
+            switch {
+                case(speakerSpin) {
+                    speakerCommand() whileTrue always
+                }
+                case(ampSpin) {
+                    ampCommand() whileTrue always
+                }
+            }
+            switch {
+                case(extendInput) {
+                    ClimberSubsystem.moveToTarget { 30.0.inches } whileTrue always
+                }
+                case(retractInput) {
+                    ClimberSubsystem.moveToTarget { 0.inches } whileTrue always
+                }
+            }
+        }
+
+        /* -------------------- AUTO -------------------- */
+        AUTONOMOUS {
+        }
+
+    } }
 }

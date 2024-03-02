@@ -2,13 +2,14 @@ package com.gattagdev.newcommands
 
 import com.gattagdev.defered.BS
 import com.gattagdev.defered.DS
+import com.gattagdev.internal.builderScope
 import com.gattagdev.units.milli
 import edu.wpi.first.wpilibj.event.EventLoop
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.CommandScheduler
 import edu.wpi.first.wpilibj2.command.Commands
 import edu.wpi.first.wpilibj2.command.Subsystem
-import edu.wpi.first.wpilibj2.command.button.Trigger
+import java.lang.reflect.Executable
 
 infix operator fun Command.plus(right: Command): Command = Commands.sequence(this, right)
 infix operator fun Command.times(right: Command): Command = Commands.parallel(this, right)
@@ -118,7 +119,7 @@ class CommandBuilder internal constructor(){
 
 fun command(
     vararg subsystems: Subsystem,
-    runDisabled: Boolean = false,
+    runDisabled: Boolean = true,
     init: CommandBuilder.() -> Unit
 ): Command = CommandBuilder.BuiltCommand(init, runDisabled, *subsystems)
 
@@ -167,3 +168,8 @@ fun commandWhen(
     body(CommandWhenBuilder(cw))
     eventLoop.bind { cw.runLoop() }
 }
+
+
+
+
+

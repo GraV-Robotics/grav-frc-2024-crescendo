@@ -26,7 +26,14 @@ inline val Number.toMilli get() = this.toDouble() * 1000.0
 inline val Number.kilo get() = this.toDouble() * 1000.0
 inline val Number.toKilo get() = this.toDouble() / 1000.0
 
+// --------------- PERCENT ---------------
 
 inline val Number.percent get() = this.toDouble() / 100.0
 inline val Number.toPercent get() = this.toDouble() * 100.0
 
+
+// --------------- TIME ---------------
+
+inline val Number.minutes get() = this.toDouble() * 60.0
+
+inline val Number.toMinutes get() = this.toDouble() / 1.0.minutes
