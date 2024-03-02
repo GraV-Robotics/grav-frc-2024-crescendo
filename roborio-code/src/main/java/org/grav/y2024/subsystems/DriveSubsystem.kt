@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj.Filesystem
 import edu.wpi.first.wpilibj.RobotBase
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.SubsystemBase
+import org.grav.y2024.Constants
 import swervelib.parser.SwerveParser
 import java.io.File
 
@@ -18,11 +19,7 @@ typealias CSS = () -> ChassisSpeeds
 
 object DriveSubsystem: BetterSubsystem() {
 
-    val maxSpeed = 14.5.feet
-
-    val maxRotationRate = 5.0.rotations //TODO This is dummy data, fix me
-
-    val swerveDrive = SwerveParser(File(Filesystem.getDeployDirectory(), "swerve")).createSwerveDrive(maxSpeed)!!
+    val swerveDrive = SwerveParser(File(Filesystem.getDeployDirectory(), "swerve")).createSwerveDrive(Constants.robotMaxSpeed)!!
 
     fun driveCommand(fieldRelative: Boolean = true, stopOnEnd: Boolean = true, supplier: CSS): Command{
         return command{
@@ -32,7 +29,7 @@ object DriveSubsystem: BetterSubsystem() {
                     t2d(cs.vxMetersPerSecond, cs.vyMetersPerSecond),
                     cs.omegaRadiansPerSecond,
                     fieldRelative,
-                    false
+                    true
                 )
             }
             onEnd {
@@ -43,7 +40,7 @@ object DriveSubsystem: BetterSubsystem() {
         }
     }
 
-    fun sim() {
+    fun sim() = command(){
         !RobotBase.isSimulation()
     }
 

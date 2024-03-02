@@ -8,18 +8,17 @@ import com.gattagdev.units.inches
 import com.revrobotics.CANSparkBase
 import com.revrobotics.CANSparkMax
 import edu.wpi.first.wpilibj2.command.SubsystemBase
+import org.grav.y2024.Constants
 
 object IntakeSubsystem : SubsystemBase() {
     private val topRoller = BrushlessCANSparkMax(23)
     private val bottomRoller = BrushlessCANSparkMax(24)
 
-    private val intakeWheelDiameter = 2.0.inches
-
     private fun basicMotorConfig (motor: CANSparkMax){
         motor.restoreFactoryDefaults()
         motor.idleMode = CANSparkBase.IdleMode.kBrake
-        motor.setSmartCurrentLimit(20)
-        motor.enableVoltageCompensation(12.0)
+        motor.setSmartCurrentLimit(Constants.neo550CurrentLimit)
+        motor.enableVoltageCompensation(Constants.neo550VoltageCompensation)
         motor.setPID{
             p(0.0)
             i(0.0)
@@ -43,14 +42,14 @@ object IntakeSubsystem : SubsystemBase() {
 
     fun intakeCommand() = command(IntakeSubsystem){
         periodic {
-            topRoller.set(1.0)
-            bottomRoller.set(1.0)
+            topRoller.set(Constants.intakeSpeed)
+            bottomRoller.set(Constants.intakeSpeed)
         }
     }
 
     fun reverseCommand() = command(IntakeSubsystem){
-        topRoller.set(-1.0)
-        bottomRoller.set(-1.0)
+        topRoller.set(Constants.motorsReverseSpeed)
+        bottomRoller.set(Constants.motorsReverseSpeed)
     }
 
 }

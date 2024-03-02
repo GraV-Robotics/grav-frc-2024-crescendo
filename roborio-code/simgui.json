@@ -1,27 +1,12 @@
 {
   "HALProvider": {
     "Other Devices": {
-      "SPARK MAX [10]": {
+      "SPARK MAX [25]": {
         "header": {
           "open": true
         }
       },
-      "SPARK MAX [11]": {
-        "header": {
-          "open": true
-        }
-      },
-      "SPARK MAX [12]": {
-        "header": {
-          "open": true
-        }
-      },
-      "SPARK MAX [13]": {
-        "header": {
-          "open": true
-        }
-      },
-      "SPARK MAX [14]": {
+      "SPARK MAX [26]": {
         "header": {
           "open": true
         }
@@ -36,19 +21,43 @@
     },
     "windows": {
       "/SmartDashboard/Field": {
+        "Robot": {
+          "style": "Box/Image"
+        },
+        "XModules": {
+          "arrowColor": [
+            0.09803921729326248,
+            0.1725490242242813,
+            0.9803921580314636,
+            255.0
+          ],
+          "arrowSize": 33,
+          "arrowWeight": 3.0,
+          "color": [
+            1.0,
+            0.0,
+            0.0,
+            255.0
+          ],
+          "style": "Hidden"
+        },
         "bottom": 544,
         "builtin": "2024 Crescendo",
         "height": 8.013679504394531,
         "left": 46,
         "right": 1088,
         "top": 36,
-        "units": "feet",
+        "units": "meters",
         "width": 16.541748046875,
         "window": {
+          "name": "simple2024",
           "visible": true
         }
       }
     }
+  },
+  "NetworkTables Info": {
+    "visible": true
   },
   "NetworkTables View": {
     "visible": false

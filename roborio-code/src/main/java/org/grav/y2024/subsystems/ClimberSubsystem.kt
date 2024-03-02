@@ -4,12 +4,14 @@ import com.gattagdev.misc.BrushlessCANSparkMax
 import com.gattagdev.newcommands.command
 import com.gattagdev.pid.linearFF
 import com.gattagdev.pid.setPID
+import com.gattagdev.units.feet
 import com.gattagdev.units.inches
 import com.revrobotics.CANSparkBase
 import com.revrobotics.CANSparkBase.ControlType.kPosition
 import com.revrobotics.CANSparkMax
 import edu.wpi.first.math.MathUtil
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import org.grav.y2024.Constants
 import kotlin.math.absoluteValue
 
 object ClimberSubsystem : SubsystemBase() {
@@ -20,9 +22,6 @@ object ClimberSubsystem : SubsystemBase() {
     private var targetPosition = 0.0
 
     private var atSetpoint = false
-
-    private val maxHeight = 10.0
-    private val minHeight = 0.0
 
     private fun basicMotorConfig (motor: CANSparkMax){
         motor.restoreFactoryDefaults()
@@ -41,8 +40,8 @@ object ClimberSubsystem : SubsystemBase() {
         }
         motor.enableSoftLimit(CANSparkBase.SoftLimitDirection.kForward, true)
         motor.enableSoftLimit(CANSparkBase.SoftLimitDirection.kReverse, true)
-        motor.setSoftLimit(CANSparkBase.SoftLimitDirection.kForward, maxHeight.toFloat())
-        motor.setSoftLimit(CANSparkBase.SoftLimitDirection.kReverse, minHeight.toFloat())
+        motor.setSoftLimit(CANSparkBase.SoftLimitDirection.kForward, Constants.climbMaxHeight.toFloat())
+        motor.setSoftLimit(CANSparkBase.SoftLimitDirection.kReverse, Constants.climbMinHeight.toFloat())
     }
 
     init{
@@ -65,7 +64,7 @@ object ClimberSubsystem : SubsystemBase() {
 
     fun moveToTarget(heightStream: () -> Double) = command(ClimberSubsystem){
         periodic {
-            val height = MathUtil.clamp(heightStream(), 0.0.inches, 40.0.inches)
+            val height = MathUtil.clamp(heightStream(), Constants.climbMinHeight, Constants.climbMaxHeight)
             targetPosition = height
         }
     }

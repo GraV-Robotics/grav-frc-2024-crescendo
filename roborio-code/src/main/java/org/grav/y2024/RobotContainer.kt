@@ -10,6 +10,7 @@ import org.grav.y2024.subsystems.ClimberSubsystem
 import org.grav.y2024.subsystems.DriveSubsystem
 import org.grav.y2024.subsystems.DriveSubsystem.driveCommand
 import org.grav.y2024.subsystems.DriveSubsystem.sim
+import org.grav.y2024.subsystems.DriveSubsystem.swerveDrive
 import org.grav.y2024.subsystems.FlywheelSubsystem.ampCommand
 import org.grav.y2024.subsystems.FlywheelSubsystem.speakerCommand
 import org.grav.y2024.subsystems.FlywheelSubsystem.waitForSetpointCommand
@@ -21,8 +22,8 @@ object RobotContainer {
     init { eventLoopContext {
 
 
-        val driver = BetterXboxController(0)
-        val manipulator = BetterXboxController(1)
+        val driver = BetterXboxController(Constants.driverControllerID)
+        val manipulator = BetterXboxController(Constants.manipulatorControllerID)
 
         val intakeInput = manipulator.leftTrigger gt 0.5
         val shootInput = manipulator.rightTrigger gt 0.5
@@ -32,18 +33,17 @@ object RobotContainer {
         val extendInput = manipulator.leftBumper
         val retractInput = manipulator.rightBumper
 
-        val driveSpeed = (manipulator.rightTrigger gt 0.5).toDouble(1.0, 0.5) times DriveSubsystem.maxSpeed
-        val rotationRate = { DriveSubsystem.maxRotationRate }
+        val driveSpeed = (manipulator.rightTrigger gt 0.5).toDouble(1.0, 0.5) times Constants.robotMaxSpeed
+        val rotationRate = { Constants.robotMaxRotationRate }
 
         val drivePow = { 2.0 }
 
         val forwardInput = driver.leftStickY deadBand 0.05 signPow drivePow times driveSpeed
-        val sideInput = driver.leftStickX deadBand 0.05 signPow drivePow times driveSpeed
-        val rotationInput = driver.rightStickX deadBand 0.05 signPow drivePow times rotationRate
+        val sideInput = driver.leftStickX deadBand 0.05 signPow drivePow times -driveSpeed
+        val rotationInput = driver.rightStickX deadBand 0.05 signPow drivePow times -rotationRate
 
 
         sim()//can u try simulating to see if it works? //I think it literally just need this im not sure tho
-
 
         /* -------------------- TELEOP -------------------- */
         TELEOPERATED {
@@ -69,10 +69,10 @@ object RobotContainer {
             }
             switch {
                 case(extendInput) {
-                    ClimberSubsystem.moveToTarget { 30.0.inches } whileTrue always
+                    ClimberSubsystem.moveToTarget { Constants.climbingPos } whileTrue always
                 }
                 case(retractInput) {
-                    ClimberSubsystem.moveToTarget { 0.inches } whileTrue always
+                    ClimberSubsystem.moveToTarget { Constants.retractedPos } whileTrue always
                 }
             }
         }
