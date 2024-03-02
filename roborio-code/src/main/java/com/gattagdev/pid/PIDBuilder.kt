@@ -1,13 +1,8 @@
 package com.gattagdev.pid
 
 
-class PIDConfig{
-    companion object {
-        operator fun invoke(builder: PIDConfigBuilder.() -> Unit): PIDConfig{
-            return TODO()
-        }
-    }
-}
+class PIDConfig constructor(val builder: PIDConfigBuilder.() -> Unit)
+
 interface PIDConfigBuilder{
     fun p(value: Double)
     fun i(value: Double)
