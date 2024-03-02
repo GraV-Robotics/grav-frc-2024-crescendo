@@ -14,8 +14,8 @@ import kotlin.math.absoluteValue
 
 object ClimberSubsystem : SubsystemBase() {
     private var climbingSpeed: Double = 0.0
-    private val leftClimbingMotor = BrushlessCANSparkMax(24)
-    private val rightClimbingMotor = BrushlessCANSparkMax(25)
+    private val leftClimbingMotor = BrushlessCANSparkMax(25)
+    private val rightClimbingMotor = BrushlessCANSparkMax(26)
 
     private var targetPosition = 0.0
 
@@ -29,16 +29,20 @@ object ClimberSubsystem : SubsystemBase() {
         motor.idleMode = CANSparkBase.IdleMode.kBrake
         motor.setSmartCurrentLimit(40)
         motor.enableVoltageCompensation(12.0)
+        motor.pidController.setP(0.0)
+        motor.pidController.setI(0.0)
+        motor.pidController.setD(0.0)
+        motor.pidController.setFF(0.0)
         motor.setPID {
             p(0.0)
             i(0.0)
             d(0.0)
             linearFF(0.0, 0.0)
-            motor.enableSoftLimit(CANSparkBase.SoftLimitDirection.kForward, true)
-            motor.enableSoftLimit(CANSparkBase.SoftLimitDirection.kReverse, true)
-            motor.setSoftLimit(CANSparkBase.SoftLimitDirection.kForward, maxHeight.toFloat())
-            motor.setSoftLimit(CANSparkBase.SoftLimitDirection.kReverse, minHeight.toFloat())
         }
+        motor.enableSoftLimit(CANSparkBase.SoftLimitDirection.kForward, true)
+        motor.enableSoftLimit(CANSparkBase.SoftLimitDirection.kReverse, true)
+        motor.setSoftLimit(CANSparkBase.SoftLimitDirection.kForward, maxHeight.toFloat())
+        motor.setSoftLimit(CANSparkBase.SoftLimitDirection.kReverse, minHeight.toFloat())
     }
 
     init{
