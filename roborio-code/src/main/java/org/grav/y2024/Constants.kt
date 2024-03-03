@@ -5,13 +5,9 @@ import com.gattagdev.units.inches
 import com.gattagdev.units.rotations
 
 object Constants {
-    //Controllers IDs
-    val driverControllerID = 0
-    val manipulatorControllerID = 1
-
     //Robot Base
     val robotMaxSpeed = 22.feet
-    val robotMaxRotationRate = 0.85.rotations
+    val robotMaxRotationRate = 2.0.rotations
 
     //Climbing
     val climbingPos = 12.0.inches

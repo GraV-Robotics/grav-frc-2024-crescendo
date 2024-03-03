@@ -43,13 +43,13 @@ object IntakeSubsystem : SubsystemBase() {
     fun intakeCommand() = command(IntakeSubsystem){
         periodic {
             topRoller.set(Constants.intakeSpeed)
-            bottomRoller.set(Constants.intakeSpeed)
+            bottomRoller.set(Constants.intakeSpeed * -1)
         }
     }
 
     fun reverseCommand() = command(IntakeSubsystem){
         topRoller.set(Constants.motorsReverseSpeed)
-        bottomRoller.set(Constants.motorsReverseSpeed)
+        bottomRoller.set(Constants.motorsReverseSpeed * -1)
     }
 
 }

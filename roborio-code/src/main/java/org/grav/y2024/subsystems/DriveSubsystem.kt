@@ -1,5 +1,6 @@
 package org.grav.y2024.subsystems
 
+import com.gattagdev.defered.BS
 import com.gattagdev.geo.t2d
 import com.gattagdev.newcommands.BetterSubsystem
 import com.gattagdev.newcommands.command
@@ -21,14 +22,18 @@ object DriveSubsystem: BetterSubsystem() {
 
     val swerveDrive = SwerveParser(File(Filesystem.getDeployDirectory(), "swerve")).createSwerveDrive(Constants.robotMaxSpeed)!!
 
-    fun driveCommand(fieldRelative: Boolean = true, stopOnEnd: Boolean = true, supplier: CSS): Command{
+    init {
+        defaultCommand = stopCommand()
+    }
+
+    fun driveCommand(fieldRelative: BS = { true }, stopOnEnd: Boolean = true, supplier: CSS): Command{
         return command{
             periodic {
                 val cs = supplier()
                 swerveDrive.drive(
                     t2d(cs.vxMetersPerSecond, cs.vyMetersPerSecond),
                     cs.omegaRadiansPerSecond,
-                    fieldRelative,
+                    fieldRelative(),
                     true
                 )
             }
@@ -44,12 +49,17 @@ object DriveSubsystem: BetterSubsystem() {
         !RobotBase.isSimulation()
     }
 
-    fun stopCommand() = command{
-
+    fun stopCommand() = command(DriveSubsystem){
         periodic {
             swerveDrive.drive(ChassisSpeeds(0.0, 0.0, 0.0))
         }
-
     }
+
+    fun zeroGyroCommand() = command{
+        periodic { swerveDrive.zeroGyro() }
+    }
+
+    val measuredAngle: Double get() = swerveDrive.gyro.rotation3d.angle
+    val measuredAngularRate: Double get() = swerveDrive.robotVelocity.omegaRadiansPerSecond
 
 }

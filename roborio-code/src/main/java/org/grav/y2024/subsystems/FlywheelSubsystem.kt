@@ -28,10 +28,10 @@ object FlywheelSubsystem : SubsystemBase() {
         motor.setSmartCurrentLimit(Constants.neoCurrentLimit)
         motor.enableVoltageCompensation(Constants.neoVoltageCompensation)
         motor.setPID{
-            p(0.0)
+            p(0.00001)
             i(0.0)
             d(0.0)
-            linearFF(0.0, 0.0)
+            linearFF(0.00017519999528303742, 0.0)
         }
     }
     init {
