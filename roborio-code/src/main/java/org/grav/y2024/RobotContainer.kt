@@ -7,7 +7,9 @@ import com.gattagdev.misc.TELEOPERATED
 import com.gattagdev.misc.always
 import com.gattagdev.newcommands.*
 import com.gattagdev.units.degrees
+import com.gattagdev.units.inches
 import com.gattagdev.units.rotations
+import com.gattagdev.units.toDegrees
 import edu.wpi.first.math.kinematics.ChassisSpeeds
 import edu.wpi.first.math.trajectory.TrapezoidProfile
 import edu.wpi.first.wpilibj.Timer
@@ -15,6 +17,7 @@ import org.grav.y2024.subsystems.ClimberSubsystem
 import org.grav.y2024.subsystems.DriveSubsystem
 import org.grav.y2024.subsystems.DriveSubsystem.driveCommand
 import org.grav.y2024.subsystems.DriveSubsystem.sim
+import org.grav.y2024.subsystems.DriveSubsystem.swerveDrive
 import org.grav.y2024.subsystems.DriveSubsystem.zeroGyroCommand
 import org.grav.y2024.subsystems.FlywheelSubsystem.ampCommand
 import org.grav.y2024.subsystems.FlywheelSubsystem.speakerCommand
@@ -41,10 +44,13 @@ object RobotContainer {
         val extendInput = manipulator.leftBumper
         val retractInput = manipulator.rightBumper
 
-        val driveSpeed = (manipulator.rightTrigger gt 0.5).toDouble(1.0, 0.5) times Constants.robotMaxSpeed
-        val rotationRate = { Constants.robotMaxRotationRate }
+        val driveSpeed = (manipulator.rightTrigger gt 0.5).toDouble(1.0, 0.5) times DriveSubsystem.robotMaxSpeed
+        val rotationRate = { DriveSubsystem.robotMaxRotationRate }
         val robotCentric = driver.leftBumper
         val zeroGyro = driver.startButton
+
+        val climbingPos = 12.0.inches
+        val retractedPos = 0.0.inches
 
         val driverAngle: () -> Double? = {
             if (driver.aButton()) 0.0.degrees
@@ -62,7 +68,7 @@ object RobotContainer {
 
         sim()//can u try simulating to see if it works? //I think it literally just need this im not sure tho
 
-        val alternateRotationInput: Flag<Double?> = flag(null)
+        var alternateRotationInput: Double? = null
         /* -------------------- TELEOP -------------------- */
         TELEOPERATED {
             //when drive angle is set
@@ -71,29 +77,40 @@ object RobotContainer {
 
 
             command {
+                println("Started")
                 val angle = driverAngle()!!
                 val goal = TrapezoidProfile.State(angle, 0.0)
-                val profile = TrapezoidProfile(TrapezoidProfile.Constraints(Constants.robotMaxRotationRate, 5.0.rotations))
+                val profile = TrapezoidProfile(TrapezoidProfile.Constraints(2.0.rotations, 0.1.rotations))
                 var prevState = TrapezoidProfile.State(DriveSubsystem.measuredAngle, DriveSubsystem.measuredAngularRate)
+                println(DriveSubsystem.measuredAngle.toDegrees)
+                println(DriveSubsystem.measuredAngularRate.toDegrees)
                 periodic {
-                    prevState = profile.calculate(elapsedTime, prevState, goal)
-                    alternateRotationInput set prevState.velocity
+//                    println("Running")
+//                    prevState = profile.calculate(elapsedTime, prevState, goal)
+//                    println(DriveSubsystem.measuredAngle.toDegrees)
+//                    alternateRotationInput = prevState.velocity
+//                    prevState = TrapezoidProfile.State(DriveSubsystem.measuredAngle, DriveSubsystem.measuredAngularRate)
+                    alternateRotationInput = 0.5.rotations
+                }
+                onEnd {
+                    alternateRotationInput = null
                 }
             } whileTrue {driverAngle() != null}
 
 
             driveCommand (fieldRelative = !robotCentric) {
-                val alternateRotation = alternateRotationInput()
                 ChassisSpeeds(
                     forwardInput(),
                     sideInput(),
-                    alternateRotation ?: rotationInput()
+                    alternateRotationInput ?: rotationInput()
                 )
             } whileTrue always
 
             IntakeSubsystem.intakeCommand() whileTrue intakeInput
             IntakeSubsystem.reverseCommand() * TriggerSubsystem.reverseCommand() whileTrue reverseInput
             waitForSetpointCommand() + shootCommand() whileTrue shootInput
+
+//            speakerCommand() whileTrue shootInput
 
             switch {
                 case(speakerSpin) {
@@ -105,10 +122,10 @@ object RobotContainer {
             }
             switch {
                 case(extendInput) {
-                    ClimberSubsystem.moveToTarget { Constants.climbingPos } whileTrue always
+                    ClimberSubsystem.moveToTarget { climbingPos } whileTrue always
                 }
                 case(retractInput) {
-                    ClimberSubsystem.moveToTarget { Constants.retractedPos } whileTrue always
+                    ClimberSubsystem.moveToTarget { retractedPos } whileTrue always
                 }
             }
         }

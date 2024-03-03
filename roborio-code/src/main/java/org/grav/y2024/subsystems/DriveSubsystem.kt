@@ -5,10 +5,12 @@ import com.gattagdev.geo.t2d
 import com.gattagdev.newcommands.BetterSubsystem
 import com.gattagdev.newcommands.command
 import com.gattagdev.units.*
+import com.kauailabs.navx.frc.AHRS
 import com.revrobotics.ColorMatch
 import edu.wpi.first.math.kinematics.ChassisSpeeds
 import edu.wpi.first.wpilibj.Filesystem
 import edu.wpi.first.wpilibj.RobotBase
+import edu.wpi.first.wpilibj.SerialPort
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.SubsystemBase
 import org.grav.y2024.Constants
@@ -19,8 +21,10 @@ typealias CSS = () -> ChassisSpeeds
 
 
 object DriveSubsystem: BetterSubsystem() {
+    val robotMaxSpeed = 22.feet
+    val robotMaxRotationRate = 1.8.rotations
 
-    val swerveDrive = SwerveParser(File(Filesystem.getDeployDirectory(), "swerve")).createSwerveDrive(Constants.robotMaxSpeed)!!
+    val swerveDrive = SwerveParser(File(Filesystem.getDeployDirectory(), "swerve")).createSwerveDrive(robotMaxSpeed)!!
 
     init {
         defaultCommand = stopCommand()
@@ -59,7 +63,7 @@ object DriveSubsystem: BetterSubsystem() {
         periodic { swerveDrive.zeroGyro() }
     }
 
-    val measuredAngle: Double get() = swerveDrive.gyro.rotation3d.angle
+    val measuredAngle: Double get() = swerveDrive.swerveDriveConfiguration.imu.rawRotation3d.angle
     val measuredAngularRate: Double get() = swerveDrive.robotVelocity.omegaRadiansPerSecond
 
 }

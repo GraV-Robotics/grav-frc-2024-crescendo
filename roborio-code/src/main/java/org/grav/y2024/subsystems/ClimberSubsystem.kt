@@ -12,6 +12,7 @@ import com.revrobotics.CANSparkMax
 import edu.wpi.first.math.MathUtil
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.grav.y2024.Constants
+import org.grav.y2024.RobotContainer
 import kotlin.math.absoluteValue
 
 object ClimberSubsystem : SubsystemBase() {
@@ -22,6 +23,9 @@ object ClimberSubsystem : SubsystemBase() {
     private var targetPosition = 0.0
 
     private var atSetpoint = false
+
+    val climbMaxHeight = 14.0.inches
+    val climbMinHeight = 0.0.inches
 
     private fun basicMotorConfig (motor: CANSparkMax){
         motor.restoreFactoryDefaults()
@@ -40,8 +44,8 @@ object ClimberSubsystem : SubsystemBase() {
         }
         motor.enableSoftLimit(CANSparkBase.SoftLimitDirection.kForward, true)
         motor.enableSoftLimit(CANSparkBase.SoftLimitDirection.kReverse, true)
-        motor.setSoftLimit(CANSparkBase.SoftLimitDirection.kForward, Constants.climbMaxHeight.toFloat())
-        motor.setSoftLimit(CANSparkBase.SoftLimitDirection.kReverse, Constants.climbMinHeight.toFloat())
+        motor.setSoftLimit(CANSparkBase.SoftLimitDirection.kForward, climbMaxHeight.toFloat())
+        motor.setSoftLimit(CANSparkBase.SoftLimitDirection.kReverse, climbMinHeight.toFloat())
     }
 
     init{
@@ -64,7 +68,7 @@ object ClimberSubsystem : SubsystemBase() {
 
     fun moveToTarget(heightStream: () -> Double) = command(ClimberSubsystem){
         periodic {
-            val height = MathUtil.clamp(heightStream(), Constants.climbMinHeight, Constants.climbMaxHeight)
+            val height = MathUtil.clamp(heightStream(), climbMinHeight, climbMaxHeight)
             targetPosition = height
         }
     }

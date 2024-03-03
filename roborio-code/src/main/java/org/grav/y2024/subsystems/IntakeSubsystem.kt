@@ -4,6 +4,7 @@ import com.gattagdev.misc.BrushlessCANSparkMax
 import com.gattagdev.newcommands.command
 import com.gattagdev.pid.linearFF
 import com.gattagdev.pid.setPID
+import com.gattagdev.units.feet
 import com.gattagdev.units.inches
 import com.revrobotics.CANSparkBase
 import com.revrobotics.CANSparkMax
@@ -14,11 +15,15 @@ object IntakeSubsystem : SubsystemBase() {
     private val topRoller = BrushlessCANSparkMax(23)
     private val bottomRoller = BrushlessCANSparkMax(24)
 
+    val intakeSpeed = 29.0.feet
+    val topIntakeWheelDiameter = 2.0.inches
+    val bottomIntakeWheelDiameter = 1.0.inches
+
     private fun basicMotorConfig (motor: CANSparkMax){
         motor.restoreFactoryDefaults()
         motor.idleMode = CANSparkBase.IdleMode.kBrake
-        motor.setSmartCurrentLimit(Constants.neo550CurrentLimit)
-        motor.enableVoltageCompensation(Constants.neo550VoltageCompensation)
+        motor.setSmartCurrentLimit(20)
+        motor.enableVoltageCompensation(12.0)
         motor.setPID{
             p(0.0)
             i(0.0)
@@ -42,8 +47,8 @@ object IntakeSubsystem : SubsystemBase() {
 
     fun intakeCommand() = command(IntakeSubsystem){
         periodic {
-            topRoller.set(Constants.intakeSpeed)
-            bottomRoller.set(Constants.intakeSpeed * -1)
+            topRoller.set(intakeSpeed)
+            bottomRoller.set(intakeSpeed * -1)
         }
     }
 

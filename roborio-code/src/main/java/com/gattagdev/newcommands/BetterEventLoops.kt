@@ -183,7 +183,8 @@ fun EventLoopContext.switch(body: @EventLoopContextDSLMarker SwitchContext.() ->
             for(case in cases){
                 if(case.first()){
                     if(current != case.second) this.stop()
-                    else if(current == case.second) Unit
+
+                    if(current == case.second) Unit
                     else {
                         current = case.second
                         case.second.start()
