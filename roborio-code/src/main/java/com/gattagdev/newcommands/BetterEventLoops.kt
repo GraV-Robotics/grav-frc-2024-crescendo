@@ -56,7 +56,7 @@ internal class ConditionalExecutable(private val condition: BS, private val exec
                 executable.start()
             }
             executable.periodic()
-        } else stop()
+        } else if(started) stop()
     }
 
     override fun stop() {
