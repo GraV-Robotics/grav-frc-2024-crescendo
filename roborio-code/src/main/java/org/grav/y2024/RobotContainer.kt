@@ -78,7 +78,7 @@ object RobotContainer {
 
         var alternateRotationInput: Double? = null
         /* -------------------- TELEOP -------------------- */
-        TELEOPERATED {
+        (TELEOPERATED or replayMode) {
             //when drive angle is set
 
             zeroGyroCommand() whileTrue zeroGyro
