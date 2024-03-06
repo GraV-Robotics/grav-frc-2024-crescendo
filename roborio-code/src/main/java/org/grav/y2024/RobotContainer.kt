@@ -2,6 +2,7 @@ package org.grav.y2024
 
 import com.gattagdev.defered.*
 import com.gattagdev.joystick.BetterXboxController
+import com.gattagdev.joystick.replayable
 import com.gattagdev.misc.AUTONOMOUS
 import com.gattagdev.misc.TELEOPERATED
 import com.gattagdev.misc.always
@@ -25,6 +26,7 @@ import org.grav.y2024.subsystems.FlywheelSubsystem.waitForSetpointCommand
 import org.grav.y2024.subsystems.IntakeSubsystem
 import org.grav.y2024.subsystems.TriggerSubsystem
 import org.grav.y2024.subsystems.TriggerSubsystem.shootCommand
+import kotlin.io.path.Path
 
 
 object RobotContainer {
@@ -32,8 +34,14 @@ object RobotContainer {
     init { eventLoopContext {
 
 
-        val driver = BetterXboxController(0)
-        val manipulator = BetterXboxController(1)
+        val driverInternal = BetterXboxController(0)
+        val manipulatorInternal = BetterXboxController(1)
+
+        val recordMode = TELEOPERATED and manipulatorInternal.startButton
+        val replayMode = AUTONOMOUS
+
+        val driver = driverInternal.replayable(recordMode, replayMode, Path("driverRecording.json"))
+        val manipulator = manipulatorInternal.replayable(recordMode, replayMode, Path("manipulatorRecording.json"))
 
         val intakeInput = manipulator.leftTrigger gt 0.5
         val reverseInput = manipulator.xButton
