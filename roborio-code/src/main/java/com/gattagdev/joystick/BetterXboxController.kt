@@ -217,6 +217,7 @@ fun BetterXboxController.replayable(path: () -> Path, record: BS, replay: BS): B
             val recordingObj = ControllerRecording(states = states)
             val recording = Json.encodeToString(ControllerRecording.serializer(), recordingObj)
             Files.writeString(mainPath(), recording)
+            states.clear()
         }
     }))
 
@@ -246,6 +247,7 @@ fun BetterXboxController.replayable(path: () -> Path, record: BS, replay: BS): B
 
         override fun stop() {
             replayController.passThrough()
+            states = mutableListOf()
         }
 
     }))
