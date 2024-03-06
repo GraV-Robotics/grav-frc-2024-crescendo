@@ -40,8 +40,8 @@ object RobotContainer {
         val recordMode = TELEOPERATED and manipulatorInternal.startButton
         val replayMode = AUTONOMOUS
 
-        val driver = driverInternal.replayable(recordMode, replayMode, Path("driverRecording.json"))
-        val manipulator = manipulatorInternal.replayable(recordMode, replayMode, Path("manipulatorRecording.json"))
+        val driver = driverInternal.replayable({ Path("driverRecording.json") }, recordMode, replayMode)
+        val manipulator = manipulatorInternal.replayable({ Path("manipulatorRecording.json") }, recordMode, replayMode)
 
         val intakeInput = manipulator.leftTrigger gt 0.5
         val reverseInput = manipulator.xButton

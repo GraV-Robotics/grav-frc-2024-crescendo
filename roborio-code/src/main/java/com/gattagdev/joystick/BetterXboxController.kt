@@ -196,11 +196,11 @@ data class ControllerRecording(
 
 
 context(EventLoopContext)
-fun BetterXboxController.replayable(record: BS, replay: BS, path: Path): BetterXboxController {
+fun BetterXboxController.replayable(path: () -> Path, record: BS, replay: BS): BetterXboxController {
     val base = this
     val replayController = ReplayableXboxController(base)
 
-    val mainPath = Filesystem.getOperatingDirectory().toPath().resolve(path)
+    val mainPath = { Filesystem.getOperatingDirectory().toPath().resolve(path()) }
 
     addExecutable(ConditionalExecutable(record, object: EventLoopExecutable{
         val states = mutableListOf<ControllerState>()
@@ -216,7 +216,7 @@ fun BetterXboxController.replayable(record: BS, replay: BS, path: Path): BetterX
         override fun stop() {
             val recordingObj = ControllerRecording(states = states)
             val recording = Json.encodeToString(ControllerRecording.serializer(), recordingObj)
-            Files.writeString(mainPath, recording)
+            Files.writeString(mainPath(), recording)
         }
     }))
 
@@ -226,7 +226,7 @@ fun BetterXboxController.replayable(record: BS, replay: BS, path: Path): BetterX
 
         override fun start() {
             try {
-                val recordingString = Files.readString(mainPath)
+                val recordingString = Files.readString(mainPath())
                 val recording = Json.decodeFromString(ControllerRecording.serializer(), recordingString)
                 states = recording.states
             }catch (e: IOException){
