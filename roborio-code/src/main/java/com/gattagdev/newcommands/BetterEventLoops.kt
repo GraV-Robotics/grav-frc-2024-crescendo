@@ -7,9 +7,11 @@ import com.gattagdev.misc.always
 import edu.wpi.first.wpilibj.event.EventLoop
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.CommandScheduler
+import kotlin.contracts.ExperimentalContracts
 
+
+@Target(AnnotationTarget.TYPE, AnnotationTarget.CLASS, AnnotationTarget.FUNCTION, AnnotationTarget.VALUE_PARAMETER)
 @DslMarker
-@Target(AnnotationTarget.TYPE, AnnotationTarget.CLASS)
 annotation class EventLoopContextDSLMarker
 
 typealias ELC_BODY = @EventLoopContextDSLMarker EventLoopContext.() -> Unit
@@ -17,6 +19,28 @@ typealias ELC_BODY = @EventLoopContextDSLMarker EventLoopContext.() -> Unit
 @EventLoopContextDSLMarker
 interface EventLoopContext{
     fun addExecutable(executable: EventLoopExecutable)
+
+    infix operator fun BS.invoke(body: (@EventLoopContextDSLMarker EventLoopContext).() -> Unit){
+        val executables = executablesFromBody(body)
+        val condition = this@BS
+        addExecutable(ConditionalExecutable(condition, RunAllExecutable(executables)))
+    }
+    infix fun Command.whileTrue(condition: BS) = condition {
+        addExecutable(object: EventLoopExecutable {
+            override fun start() = schedule()
+            override fun periodic() = Unit
+            override fun stop() = cancel()
+        })
+    }
+    infix fun Command.onTrue(condition: BS) = condition {
+        addExecutable(object: EventLoopExecutable {
+            override fun start() = schedule()
+            override fun periodic() = Unit
+            override fun stop() = Unit
+        })
+    }
+    infix fun Command.whileFalse(condition: BS) = whileTrue(!condition)
+    infix fun Command.onFalse(condition: BS) = onTrue(!condition)
 }
 
 interface EventLoopExecutable {
@@ -64,6 +88,8 @@ internal class ConditionalExecutable(private val condition: BS, private val exec
         started = false
     }
 }
+
+
 
 
 
@@ -121,49 +147,21 @@ fun <T> EventLoopContext.flag(init: T): Flag<T> {
     return flag
 }
 
-context(EventLoopContext)
-infix operator fun BS.invoke(body: @EventLoopContextDSLMarker EventLoopContext.() -> Unit){
-    val executables = executablesFromBody(body)
-    val condition = this@BS
-    addExecutable(ConditionalExecutable(condition, RunAllExecutable(executables)))
-}
 
 
-context(EventLoopContext)
-infix fun Command.whileTrue(condition: BS) = condition {
-    addExecutable(object: EventLoopExecutable {
-        override fun start() = schedule()
-        override fun periodic() = Unit
-        override fun stop() = cancel()
-    })
-}
 
-context(EventLoopContext)
-infix fun Command.onTrue(condition: BS) = condition {
-    addExecutable(object: EventLoopExecutable {
-        override fun start() = schedule()
-        override fun periodic() = Unit
-        override fun stop() = Unit
-    })
-}
 
-context(EventLoopContext)
-infix fun Command.whileFalse(condition: BS) = whileTrue(!condition)
-context(EventLoopContext)
-infix fun Command.onFalse(condition: BS) = onTrue(!condition)
 
 @EventLoopContextDSLMarker
 interface SwitchContext {
-    fun case(condition: BS, body: @EventLoopContextDSLMarker EventLoopContext.() -> Unit): Unit
+    fun case(condition: BS, body: (@EventLoopContextDSLMarker EventLoopContext).() -> Unit): Unit
 }
-
-
 
 fun EventLoopContext.switch(body: @EventLoopContextDSLMarker SwitchContext.() -> Unit){
     val cases = mutableListOf<Pair<BS, EventLoopExecutable>>()
     builderScope {
         val context = object: SwitchContext{
-            override fun case(condition: BS, body: @EventLoopContextDSLMarker EventLoopContext.() -> Unit) { tryRun {
+            override fun case(condition: BS, body: (@EventLoopContextDSLMarker EventLoopContext).() -> Unit) { tryRun {
                 cases.add(Pair(condition, RunAllExecutable(executablesFromBody(body))))
             } }
         }
@@ -184,8 +182,9 @@ fun EventLoopContext.switch(body: @EventLoopContextDSLMarker SwitchContext.() ->
                 if(case.first()){
                     if(current != case.second) this.stop()
 
-                    if(current == case.second) Unit
-                    else {
+                    if(current == case.second) {
+
+                    } else {
                         current = case.second
                         case.second.start()
                     }

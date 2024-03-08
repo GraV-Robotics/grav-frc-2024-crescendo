@@ -49,10 +49,6 @@ object DriveSubsystem: BetterSubsystem() {
         }
     }
 
-    fun sim() = command(){
-        !RobotBase.isSimulation()
-    }
-
     fun stopCommand() = command(DriveSubsystem){
         periodic {
             swerveDrive.drive(ChassisSpeeds(0.0, 0.0, 0.0))
