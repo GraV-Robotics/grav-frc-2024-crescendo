@@ -37,7 +37,7 @@ interface BetterXboxController {
     val leftStickY: DS
     val rightStickX: DS
     val rightStickY: DS
-    val povDegrees: DS
+    val povDegrees: () -> Double?
 
     companion object{
         operator fun invoke(port: Int): BetterXboxController = BetterXboxControllerImpl(port)
@@ -75,7 +75,7 @@ internal class BetterXboxControllerImpl(port: Int) : BetterXboxController {
     override val leftStickY: DS get() = { -base.leftY } // Inverted Y axis
     override val rightStickX: DS get() = { base.rightX }
     override val rightStickY: DS get() = { base.rightY }
-    override val povDegrees: DS get() = { base.pov.toDouble() }
+    override val povDegrees: () -> Double? get() = { if(base.pov == -1) null else base.pov.toDouble() }
 }
 
 

@@ -25,7 +25,7 @@ class ProxyController(
     override val leftStickY: DS get() = { input().leftStickY() }
     override val rightStickX: DS get() = { input().rightStickX() }
     override val rightStickY: DS get() = { input().rightStickY() }
-    override val povDegrees: DS get() = { input().povDegrees() }
+    override val povDegrees: () -> Double? get() = { input().povDegrees() }
 }
 
 class StateReplayController(private val state: () -> ControllerState): BetterXboxController{
@@ -45,7 +45,7 @@ class StateReplayController(private val state: () -> ControllerState): BetterXbo
     override val leftStickY: DS get() = { state().leftStickY }
     override val rightStickX: DS get() = { state().rightStickX }
     override val rightStickY: DS get() = { state().rightStickY }
-    override val povDegrees: DS get() = { state().povDegrees }
+    override val povDegrees: () -> Double? get() = { state().povDegrees }
 }
 
 @Serializable
@@ -66,7 +66,7 @@ data class ControllerState(
     val leftStickY: Double = 0.0,
     val rightStickX: Double = 0.0,
     val rightStickY: Double = 0.0,
-    val povDegrees: Double = 0.0
+    val povDegrees: Double? = null
 )
 
 val BetterXboxController.currentState get() = ControllerState(

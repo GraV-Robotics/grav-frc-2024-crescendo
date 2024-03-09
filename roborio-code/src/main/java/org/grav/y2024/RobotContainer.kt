@@ -8,8 +8,13 @@ import com.gattagdev.misc.always
 import com.gattagdev.newcommands.*
 import com.gattagdev.units.degrees
 import com.gattagdev.units.inches
+import com.gattagdev.units.rotations
+import com.gattagdev.units.toDegrees
 import edu.wpi.first.math.kinematics.ChassisSpeeds
+import edu.wpi.first.math.trajectory.TrapezoidProfile
 import edu.wpi.first.wpilibj.DriverStation
+import edu.wpi.first.wpilibj.Timer
+import edu.wpi.first.wpilibj2.command.TrapezoidProfileCommand
 import org.grav.y2024.subsystems.ClimberSubsystem
 import org.grav.y2024.subsystems.DriveSubsystem
 import org.grav.y2024.subsystems.DriveSubsystem.driveCommand
@@ -35,12 +40,13 @@ object RobotContainer {
 
         replayManager {
             path = { Path("recording.json") }
+            replay = AUTONOMOUS
             val trueTeleop = DriverStation::isTeleopEnabled
 
-            driver = BetterXboxController(0).replayable("driver")
+            driver = BetterXboxController(0).also {
+                record = trueTeleop and it.leftBumper
+            }.replayable("driver")
             manipulator = BetterXboxController(1).also {
-                record = trueTeleop and it.startButton
-                replay = AUTONOMOUS
             }.replayable("manipulator")
             TELEOPERATED = trueTeleop.replayable("teleop")
         }
@@ -57,7 +63,7 @@ object RobotContainer {
         val climbingPos = 12.0.inches
         val retractedPos = 0.0.inches
 
-        val driveSpeed = (manipulator.rightTrigger gt 0.5).toDouble(1.0, 0.5) times DriveSubsystem.robotMaxSpeed
+        val driveSpeed =  { DriveSubsystem.robotMaxSpeed }
         val rotationRate = { DriveSubsystem.robotMaxRotationRate }
         val robotCentric = driver.leftBumper
         val zeroGyroInput = driver.startButton
@@ -65,18 +71,21 @@ object RobotContainer {
 
 
         val driverAngle: () -> Double? = {
-            if (driver.aButton()) 0.0.degrees
-            else if (driver.bButton()) 90.0.degrees
-            else if (driver.yButton()) 180.0.degrees
-            else if (driver.xButton()) 270.0.degrees
-            else null
+//            if (driver.aButton()) 0.0.degrees
+//            else if (driver.bButton()) 90.0.degrees
+//            else if (driver.yButton()) 180.0.degrees
+//            else if (driver.xButton()) 270.0.degrees
+//            else null
+            driver.povDegrees()?.let { 180.degrees - it.degrees }
         }
 
-        val drivePow = { 2.0 }
+        val drivePow = { 1.0 }
 
-        val forwardInput = driver.leftStickY deadBand 0.05 signPow drivePow times driveSpeed
-        val sideInput = driver.leftStickX deadBand 0.05 signPow drivePow times driveSpeed
-        val rotationInput = driver.rightStickX deadBand 0.05 signPow drivePow times -rotationRate
+        val deadband = 0.1
+
+        val forwardInput = driver.leftStickY deadBand deadband signPow drivePow times driveSpeed
+        val sideInput = driver.leftStickX deadBand deadband signPow drivePow times -driveSpeed
+        val rotationInput = driver.rightStickX deadBand deadband signPow drivePow times -rotationRate
 
 
         var alternateRotationInput: Double? = null
@@ -85,12 +94,37 @@ object RobotContainer {
 
             zeroGyroCommand() whileTrue zeroGyroInput
 
+            command{
+                val constraints = TrapezoidProfile.Constraints(2.0.rotations,2.0.rotations)
+                val getSetpoint = { driverAngle()!! }
+                var currentSetpoint = getSetpoint()
+                var profile = TrapezoidProfile(constraints)
+                var startTime = 0.0
+
+                periodic {
+                    val newSetpoint = getSetpoint()
+                    if(newSetpoint != currentSetpoint){
+                        profile = TrapezoidProfile(constraints)
+                        currentSetpoint = newSetpoint
+                        startTime = elapsedTime
+                    }
+                    val output = profile.calculate(
+                        (elapsedTime - startTime),
+                        TrapezoidProfile.State(DriveSubsystem.measuredAngle, DriveSubsystem.measuredAngularRate),
+                        TrapezoidProfile.State(currentSetpoint, 0.0)
+                    )
+                    val error = output.position - DriveSubsystem.measuredAngle
+                    alternateRotationInput = -(error * 4)
+                    println("${error.toDegrees}")
+                }
+                onEnd { alternateRotationInput = null }
+            } whileTrue {driverAngle() != null}
 
             driveCommand (fieldRelative = !robotCentric) {
                 ChassisSpeeds(
                     forwardInput(),
                     sideInput(),
-                    rotationInput()
+                    alternateRotationInput ?: rotationInput()
                 )
             } whileTrue always
 

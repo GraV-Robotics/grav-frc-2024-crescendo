@@ -13,7 +13,6 @@ import edu.wpi.first.wpilibj.RobotBase
 import edu.wpi.first.wpilibj.SerialPort
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.SubsystemBase
-import org.grav.y2024.Constants
 import swervelib.parser.SwerveParser
 import java.io.File
 
@@ -21,7 +20,7 @@ typealias CSS = () -> ChassisSpeeds
 
 
 object DriveSubsystem: BetterSubsystem() {
-    val robotMaxSpeed = 22.feet
+    val robotMaxSpeed = 4.46
     val robotMaxRotationRate = 1.8.rotations
 
     val swerveDrive = SwerveParser(File(Filesystem.getDeployDirectory(), "swerve")).createSwerveDrive(robotMaxSpeed)!!
@@ -38,7 +37,7 @@ object DriveSubsystem: BetterSubsystem() {
                     t2d(cs.vxMetersPerSecond, cs.vyMetersPerSecond),
                     cs.omegaRadiansPerSecond,
                     fieldRelative(),
-                    true
+                    false
                 )
             }
             onEnd {
@@ -59,7 +58,11 @@ object DriveSubsystem: BetterSubsystem() {
         periodic { swerveDrive.zeroGyro() }
     }
 
-    val measuredAngle: Double get() = swerveDrive.swerveDriveConfiguration.imu.rawRotation3d.angle
+    val measuredAngle: Double get() = swerveDrive.gyroRotation3d.z
     val measuredAngularRate: Double get() = swerveDrive.robotVelocity.omegaRadiansPerSecond
 
+
+    override fun periodic() {
+        println(measuredAngle)
+    }
 }

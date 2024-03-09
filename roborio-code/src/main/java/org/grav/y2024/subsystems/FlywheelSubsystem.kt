@@ -12,7 +12,6 @@ import com.revrobotics.CANSparkMax
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import org.grav.y2024.Constants
 import kotlin.math.PI
 import kotlin.math.absoluteValue
 
@@ -99,15 +98,17 @@ object FlywheelSubsystem : SubsystemBase() {
     }
 
     fun ampCommand() = runCommand( lowerAmpSpeed, upperAmpSpeed)
-    fun speakerCommand() = runCommand { 3250.0 }
+//    fun speakerCommand() = runCommand { 3250.0 }
+    fun speakerCommand() = runCommand { 5700.0 }
+
     fun waitForSetpointCommand() = command {
         finish { isAtSetpoint }
     }
 
     fun reverseCommand() = command(FlywheelSubsystem){
         periodic {
-            upperMotor.set(Constants.motorsReverseSpeed)
-            lowerMotor.set(Constants.motorsReverseSpeed)
+            upperMotor.set(-1.0)
+            lowerMotor.set(-1.0)
         }
     }
 
