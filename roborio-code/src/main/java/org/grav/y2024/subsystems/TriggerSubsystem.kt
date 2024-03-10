@@ -6,7 +6,6 @@ import com.gattagdev.units.feet
 import com.gattagdev.units.inches
 import com.revrobotics.CANSparkBase.IdleMode.kBrake
 import edu.wpi.first.wpilibj2.command.SubsystemBase
-import org.grav.y2024.Constants
 
 object TriggerSubsystem : SubsystemBase() {
 

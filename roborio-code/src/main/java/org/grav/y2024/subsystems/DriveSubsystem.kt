@@ -4,6 +4,8 @@ import com.gattagdev.defered.BS
 import com.gattagdev.geo.t2d
 import com.gattagdev.newcommands.BetterSubsystem
 import com.gattagdev.newcommands.command
+import com.gattagdev.newcommands.eventLoopContext
+import com.gattagdev.nt.quickDashboard
 import com.gattagdev.units.*
 import com.kauailabs.navx.frc.AHRS
 import com.revrobotics.ColorMatch
@@ -20,13 +22,32 @@ typealias CSS = () -> ChassisSpeeds
 
 
 object DriveSubsystem: BetterSubsystem() {
-    val robotMaxSpeed = 4.46
-    val robotMaxRotationRate = 1.8.rotations
+    val trueRobotMaxSpeed = 4.46
+    val robotMaxRotationRate by quickDashboard(1.8.rotations){ rotations }
 
-    val swerveDrive = SwerveParser(File(Filesystem.getDeployDirectory(), "swerve")).createSwerveDrive(robotMaxSpeed)!!
+    val swerveDrive = SwerveParser(File(Filesystem.getDeployDirectory(), "swerve")).createSwerveDrive(trueRobotMaxSpeed)!!
+
+    val isOpenLoop by quickDashboard(false)
+    val cosineCompensator by quickDashboard(true)
+    val headingCorrection by quickDashboard(false)
+    val velocityCorrection by quickDashboard(true)
+
+    val angleJoyStickRadiusDeadband by quickDashboard(swerveDrive.swerveController.config.angleJoyStickRadiusDeadband)
+    val headingKP by quickDashboard(swerveDrive.swerveController.config.headingPIDF.p)
+    val headingKI by quickDashboard(swerveDrive.swerveController.config.headingPIDF.i)
+    val headingKD by quickDashboard(swerveDrive.swerveController.config.headingPIDF.d)
+
+//    val driveKP by quickDashboard(swerveDrive.modules[0]!!.)
+
+
 
     init {
         defaultCommand = stopCommand()
+        eventLoopContext {
+            ::cosineCompensator onChange { v -> swerveDrive.setCosineCompensator(v) }
+            ::headingCorrection onChange { v -> swerveDrive.headingCorrection = v }
+            ::velocityCorrection onChange { v -> swerveDrive.chassisVelocityCorrection = v }
+        }
     }
 
     fun driveCommand(fieldRelative: BS = { true }, stopOnEnd: Boolean = true, supplier: CSS): Command{
@@ -37,7 +58,7 @@ object DriveSubsystem: BetterSubsystem() {
                     t2d(cs.vxMetersPerSecond, cs.vyMetersPerSecond),
                     cs.omegaRadiansPerSecond,
                     fieldRelative(),
-                    false
+                    isOpenLoop
                 )
             }
             onEnd {
@@ -55,7 +76,11 @@ object DriveSubsystem: BetterSubsystem() {
     }
 
     fun zeroGyroCommand() = command{
-        periodic { swerveDrive.zeroGyro() }
+
+        periodic {
+            swerveDrive.zeroGyro()
+            println("########## ZEROING GYRO ##########")
+        }
     }
 
     val measuredAngle: Double get() = swerveDrive.gyroRotation3d.z
@@ -63,6 +88,6 @@ object DriveSubsystem: BetterSubsystem() {
 
 
     override fun periodic() {
-        println(measuredAngle)
+
     }
 }

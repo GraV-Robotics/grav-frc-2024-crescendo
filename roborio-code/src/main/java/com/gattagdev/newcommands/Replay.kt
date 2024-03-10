@@ -120,8 +120,12 @@ inline fun <reified RET> EventLoopContext.replayManager(builder: @EventLoopConte
             }
         })
     }
+
+
+    val basePath = Filesystem.getOperatingDirectory().toPath().resolve("recordings")
+    Files.createDirectories(basePath)
     // This is a really lazy way to do the check, I'll get around to it later
-    val path = pathSupplier!!.let { { Filesystem.getOperatingDirectory().toPath().resolve(it()) } }
+    val path = pathSupplier!!.let { { basePath.resolve(it()) } }
     val record = recordSupplier!!
     val replay = replaySupplier!!
 

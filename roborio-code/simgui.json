@@ -16,6 +16,7 @@
   "NTProvider": {
     "types": {
       "/FMSInfo": "FMSInfo",
+      "/SmartDashboard/Auto-Mode": "String Chooser",
       "/SmartDashboard/Field": "Field2d",
       "/SmartDashboard/navX-Sensor[1]": "Gyro",
       "/SmartDashboard/navX-Sensor[2]": "Gyro"
@@ -57,10 +58,36 @@
       }
     }
   },
+  "NetworkTables": {
+    "persistent": {
+      "SmartDashboard": {
+        ".default": {
+          "open": true
+        },
+        "DriveSubsystem": {
+          "open": true
+        },
+        "FlywheelSubsystem": {
+          "open": true
+        },
+        "open": true
+      }
+    },
+    "transitory": {
+      "SmartDashboard": {
+        "Auto-Mode": {
+          "string[]##v_/SmartDashboard/Auto-Mode/options": {
+            "open": true
+          }
+        },
+        "FlywheelSubsystem": {
+          "open": true
+        },
+        "open": true
+      }
+    }
+  },
   "NetworkTables Info": {
     "visible": true
-  },
-  "NetworkTables View": {
-    "visible": false
   }
 }

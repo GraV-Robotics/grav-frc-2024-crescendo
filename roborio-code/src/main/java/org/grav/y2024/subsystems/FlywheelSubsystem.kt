@@ -3,6 +3,7 @@ package org.grav.y2024.subsystems
 import com.gattagdev.defered.DS
 import com.gattagdev.misc.BrushlessCANSparkMax
 import com.gattagdev.newcommands.*
+import com.gattagdev.nt.quickDashboard
 import com.gattagdev.pid.linearFF
 import com.gattagdev.pid.setPID
 import com.gattagdev.units.*
@@ -20,17 +21,13 @@ object FlywheelSubsystem : SubsystemBase() {
     private val upperMotor = BrushlessCANSparkMax(20)
     private val lowerMotor = BrushlessCANSparkMax(21)
 
-    private val lowerAmpDefault = 275.0
-    private val upperAmpDefault = 1650.0
+    private var speakerSpeed by quickDashboard(3250.0)
 
-    private val mainFFDefault = 0.002050
-    private val secondFFDefault = 0.00004
+    private var lowerAmpSpeed by quickDashboard(275.0)
+    private var upperAmpSpeed by quickDashboard(1650.0)
 
-    private val lowerAmpSpeed = { SmartDashboard.getNumber("lowerSpeed", lowerAmpDefault) }
-    private val upperAmpSpeed = { SmartDashboard.getNumber("upperSpeed", upperAmpDefault) }
-
-    private val mainFF = { SmartDashboard.getNumber("mainFF", mainFFDefault) }
-    private val secondFF = { SmartDashboard.getNumber("secondFF", secondFFDefault) }
+    private var mainFF by quickDashboard(0.002050)
+    private var secondFF by quickDashboard(0.00004)
 
     private var atSetpoint = false
     val isAtSetpoint: Boolean get() = atSetpoint
@@ -57,11 +54,6 @@ object FlywheelSubsystem : SubsystemBase() {
         basicMotorConfig(upperMotor)
         basicMotorConfig(lowerMotor)
 
-        SmartDashboard.putNumber("lowerSpeed", lowerAmpDefault)
-        SmartDashboard.putNumber("upperSpeed", upperAmpDefault)
-        SmartDashboard.putNumber("mainFF", mainFFDefault)
-        SmartDashboard.putNumber("secondFF", secondFFDefault)
-
         defaultCommand = stopCommand()
     }
 
@@ -85,7 +77,7 @@ object FlywheelSubsystem : SubsystemBase() {
             val upper = upperStream()
             val lower = lowerStream()
 
-            val compute = {rate: Double -> (mainFF() * rate  + (secondFF() * (3500 - rate))) }
+            val compute = {rate: Double -> (mainFF * rate  + (secondFF * (3500 - rate))) }
             upperMotor.pidController.setReference(upper, kVelocity, 0, compute(upper))
             lowerMotor.pidController.setReference(lower, kVelocity, 0, compute(lower))
 
@@ -97,9 +89,8 @@ object FlywheelSubsystem : SubsystemBase() {
         }
     }
 
-    fun ampCommand() = runCommand( lowerAmpSpeed, upperAmpSpeed)
-//    fun speakerCommand() = runCommand { 3250.0 }
-    fun speakerCommand() = runCommand { 5700.0 }
+    fun ampCommand() = runCommand( ::lowerAmpSpeed, ::upperAmpSpeed)
+    fun speakerCommand() = runCommand { speakerSpeed }
 
     fun waitForSetpointCommand() = command {
         finish { isAtSetpoint }

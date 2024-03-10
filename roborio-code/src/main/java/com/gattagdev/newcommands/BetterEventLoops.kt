@@ -41,12 +41,33 @@ interface EventLoopContext{
     }
     infix fun Command.whileFalse(condition: BS) = whileTrue(!condition)
     infix fun Command.onFalse(condition: BS) = onTrue(!condition)
+
+
+    infix fun <T, F: () -> T> F.onChange(changeHandler: @EventLoopContextDSLMarker (T) -> Unit): F{
+        this.onChange{prev, post -> changeHandler(post)}
+        return this
+    }
+    infix fun <T, F: () -> T> F.onChange(changeHandler: @EventLoopContextDSLMarker (T?, T) -> Unit): F{
+        var first = true
+        var last: T? = null
+        addExecutable(object: EventLoopExecutable{
+            override fun periodic() {
+                val current = this@onChange()
+                if(first || last != current){
+                    changeHandler(last, current)
+                    first = false
+                }
+                last = current
+            }
+        })
+        return this
+    }
 }
 
 interface EventLoopExecutable {
-    fun start()
-    fun periodic()
-    fun stop()
+    fun start() { }
+    fun periodic() { }
+    fun stop() { }
 }
 
 internal class RunAllExecutable(private val executables: List<EventLoopExecutable>): EventLoopExecutable {
@@ -205,3 +226,4 @@ fun EventLoopContext.switch(body: @EventLoopContextDSLMarker SwitchContext.() ->
 
 
 }
+
