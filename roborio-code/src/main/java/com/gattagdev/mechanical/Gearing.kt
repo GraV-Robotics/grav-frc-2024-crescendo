@@ -125,7 +125,7 @@ interface GearSystemBuilder{
     operator fun GearStage.unaryPlus() = add(this)
 }
 
-fun gearSystem(builder: GearSystemBuilder.() -> Unit, name: String = "Unnamed System"): GearSystem {
+fun gearSystem(name: String = "Unnamed System", builder: GearSystemBuilder.() -> Unit): GearSystem {
     val stages = mutableListOf<GearStage>()
     val bo = object: GearSystemBuilder{
         override fun add(gearStage: GearStage) {

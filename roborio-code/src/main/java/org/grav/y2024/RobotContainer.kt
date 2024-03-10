@@ -24,6 +24,7 @@ import org.grav.y2024.subsystems.FlywheelSubsystem.waitForSetpointCommand
 import org.grav.y2024.subsystems.IntakeSubsystem
 import org.grav.y2024.subsystems.TriggerSubsystem
 import org.grav.y2024.subsystems.TriggerSubsystem.shootCommand
+import org.photonvision.PhotonCamera
 import kotlin.io.path.Path
 
 
@@ -35,35 +36,35 @@ object RobotContainer {
 
     init { eventLoopContext {
 
-        var recordingPath = "recording.json"
-        var replayAllowed = false
+        var recordingPath = "center-2-note.json"
+        var replayAllowed = true
 
-        chooser("Auto-Mode"){
-            default("Do Nothing"){
-                recordingPath = "do-nothing.json"
-                replayAllowed = false
-            }
-            choice("Movement"){
-                recordingPath = "movement.json"
-                replayAllowed = true
-            }
-            choice("Center 1-Note"){
-                recordingPath = "center-1-note.json"
-                replayAllowed = true
-            }
-            choice("Center 2-Note"){
-                recordingPath = "center-2-note.json"
-                replayAllowed = true
-            }
-            choice("Center 3-Note"){
-                recordingPath = "center-2-note.json"
-                replayAllowed = true
-            }
-            choice("Center 4-Note"){
-                recordingPath = "center-2-note.json"
-                replayAllowed = true
-            }
-        }
+//        chooser("Auto-Mode"){
+//            default("Do Nothing"){
+//                recordingPath = "do-nothing.json"
+//                replayAllowed = false
+//            }
+//            choice("Movement"){
+//                recordingPath = "movement.json"
+//                replayAllowed = true
+//            }
+//            choice("Center 1-Note"){
+//                recordingPath = "center-1-note.json"
+//                replayAllowed = true
+//            }
+//            choice("Center 2-Note"){
+//                recordingPath = "center-2-note.json"
+//                replayAllowed = true
+//            }
+//            choice("Center 3-Note"){
+//                recordingPath = "center-3-note.json"
+//                replayAllowed = true
+//            }
+//            choice("Center 4-Note"){
+//                recordingPath = "center-4-note.json"
+//                replayAllowed = true
+//            }
+//        }
 
         val driver: BetterXboxController
         val manipulator: BetterXboxController
@@ -75,7 +76,7 @@ object RobotContainer {
             val trueTeleop = DriverStation::isTeleopEnabled
 
             driver = BetterXboxController(0).also {
-                record = trueTeleop and it.leftBumper and ::`Recording-Access-Enabled` and !DriverStation::isFMSAttached
+                record = trueTeleop and (it.leftBumper) and ::`Recording-Access-Enabled` and !DriverStation::isFMSAttached
             }.replayable("driver")
             manipulator = BetterXboxController(1).replayable("manipulator")
             TELEOPERATED = trueTeleop.replayable("teleop")
@@ -99,7 +100,7 @@ object RobotContainer {
         val forwardInput     = driver.leftStickY  deadBand deadband times driveSpeed
         val sideInput        = driver.leftStickX  deadBand deadband times -driveSpeed
         val rotationInput    = driver.rightStickX deadBand deadband signPow { 2.0 } times -rotationRate
-        val robotCentric     = driver.leftBumper
+        val robotCentric     = driver.leftTrigger gt 0.5
         val zeroGyroInput    = driver.startButton
         val driverAngle      = { driver.povDegrees()?.let { 180.degrees - it.degrees } }
         val trackNoteInput   = driver.rightTrigger gt 0.25
@@ -111,38 +112,45 @@ object RobotContainer {
 
             zeroGyroCommand() whileTrue zeroGyroInput
 
+            val frontCamera = PhotonCamera("front-camera")
+
+
+            val lowerCameraCutoff by quickDashboard(-11.degrees, name="ring-track/cutoff"){ degrees }
+            val ringTrackKP by quickDashboard(10.0, name="ring-track/kP"){ 10.0 }
             command{
-                val constraints = TrapezoidProfile.Constraints(2.0.rotations,2.0.rotations)
-                val getSetpoint = { driverAngle()!! }
-                var currentSetpoint = getSetpoint()
-                var profile = TrapezoidProfile(constraints)
-                var startTime = 0.0
+                val initialAngle = continuousGyro()
+                var lastRobotAngle = initialAngle
+                var lastTimestamp = frontCamera.latestResult.timestampSeconds
+                var lastCameraAngle = 0.0
+                var unlocked = true
+
 
                 periodic {
-                    val newSetpoint = getSetpoint()
-                    if(newSetpoint != currentSetpoint){
-                        profile = TrapezoidProfile(constraints)
-                        currentSetpoint = newSetpoint
-                        startTime = elapsedTime
+                    val last = frontCamera.latestResult
+                    if(last.timestampSeconds != lastTimestamp && last.targets!!.isNotEmpty() && unlocked){
+                        lastTimestamp = last.timestampSeconds
+                        lastRobotAngle = continuousGyro()
+                        lastCameraAngle = -last.targets[0].yaw.degrees
+                        if(last.targets[0].pitch.degrees < lowerCameraCutoff) unlocked = false
                     }
-                    val output = profile.calculate(
-                        (elapsedTime - startTime),
-                        TrapezoidProfile.State(DriveSubsystem.measuredAngle, DriveSubsystem.measuredAngularRate),
-                        TrapezoidProfile.State(currentSetpoint, 0.0)
-                    )
-                    val error = output.position - DriveSubsystem.measuredAngle
-                    alternateRotationInput = -(error * 4)
-                    println("${error.toDegrees}")
+                    val setpoint = lastRobotAngle + lastCameraAngle
+
+                    val measured = continuousGyro()
+                    val error = setpoint - measured
+
+                    alternateRotationInput = error * ringTrackKP
                 }
+
                 onEnd { alternateRotationInput = null }
-            } whileTrue {driverAngle() != null}
+            } whileTrue trackNoteInput
+
+
+            command{
+
+            }
 
             driveCommand (fieldRelative = !robotCentric) {
-                ChassisSpeeds(
-                    forwardInput(),
-                    sideInput(),
-                    alternateRotationInput ?: rotationInput()
-                )
+                ChassisSpeeds(forwardInput(), sideInput(), alternateRotationInput ?: rotationInput())
             } whileTrue always
 
             switch {

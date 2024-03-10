@@ -2,6 +2,8 @@ package org.grav.y2024.subsystems
 
 import com.gattagdev.defered.BS
 import com.gattagdev.geo.t2d
+import com.gattagdev.mechanical.gearSystem
+import com.gattagdev.mechanical.meshedGears
 import com.gattagdev.newcommands.BetterSubsystem
 import com.gattagdev.newcommands.command
 import com.gattagdev.newcommands.eventLoopContext
@@ -27,6 +29,7 @@ object DriveSubsystem: BetterSubsystem() {
 
     val swerveDrive = SwerveParser(File(Filesystem.getDeployDirectory(), "swerve")).createSwerveDrive(trueRobotMaxSpeed)!!
 
+    val wheelDiameter by quickDashboard(3.0.inches) { inches }
     val isOpenLoop by quickDashboard(false)
     val cosineCompensator by quickDashboard(true)
     val headingCorrection by quickDashboard(false)
@@ -37,8 +40,7 @@ object DriveSubsystem: BetterSubsystem() {
     val headingKI by quickDashboard(swerveDrive.swerveController.config.headingPIDF.i)
     val headingKD by quickDashboard(swerveDrive.swerveController.config.headingPIDF.d)
 
-//    val driveKP by quickDashboard(swerveDrive.modules[0]!!.)
-
+    val driveGearing = (22.0/13.0) * (45.0 / 15.0)
 
 
     init {
@@ -47,6 +49,13 @@ object DriveSubsystem: BetterSubsystem() {
             ::cosineCompensator onChange { v -> swerveDrive.setCosineCompensator(v) }
             ::headingCorrection onChange { v -> swerveDrive.headingCorrection = v }
             ::velocityCorrection onChange { v -> swerveDrive.chassisVelocityCorrection = v }
+            ::wheelDiameter onChange { v -> swerveDrive.modules.forEach {
+                val const = (1/driveGearing) * Math.PI * v
+                println(const)
+                println(driveGearing)
+                it.setDriveMotorConversionFactor(const)
+            }}
+
         }
     }
 
@@ -88,6 +97,6 @@ object DriveSubsystem: BetterSubsystem() {
 
 
     override fun periodic() {
-
+//        swerveDrive.swerveController.
     }
 }
