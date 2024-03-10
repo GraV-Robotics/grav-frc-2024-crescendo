@@ -98,8 +98,8 @@ object FlywheelSubsystem : SubsystemBase() {
     }
 
     fun ampCommand() = runCommand( lowerAmpSpeed, upperAmpSpeed)
-//    fun speakerCommand() = runCommand { 3250.0 }
-    fun speakerCommand() = runCommand { 5700.0 }
+    fun speakerCommand() = runCommand { 3250.0 }
+//    fun speakerCommand() = runCommand { 5700.0 }
 
     fun waitForSetpointCommand() = command {
         finish { isAtSetpoint }
