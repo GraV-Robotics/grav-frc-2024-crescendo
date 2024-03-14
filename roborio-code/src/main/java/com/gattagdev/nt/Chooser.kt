@@ -31,7 +31,7 @@ fun chooser(name: String, builder: ChooserBuilder.() -> Unit){
         }
     })
     if(defaultId == null) throw IllegalArgumentException("Chooser (${chooserName}) must have one default")
-
+    selectionHandlers[chooser.selected ?: defaultId!!]?.invoke()
     chooser.onChange { selectionHandlers[it ?: defaultId!!]?.invoke() }
     SmartDashboard.putData(name, chooser)
 }

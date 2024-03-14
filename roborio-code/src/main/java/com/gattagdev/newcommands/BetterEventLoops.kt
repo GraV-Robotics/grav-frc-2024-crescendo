@@ -227,3 +227,11 @@ fun EventLoopContext.switch(body: @EventLoopContextDSLMarker SwitchContext.() ->
 
 }
 
+fun quickExecutable(start: () -> Unit = {}, stop: () -> Unit = {}, periodic: () -> Unit = {}): EventLoopExecutable {
+    return object: EventLoopExecutable {
+        override fun start() = start()
+        override fun stop() = stop()
+        override fun periodic() = periodic()
+    }
+}
+

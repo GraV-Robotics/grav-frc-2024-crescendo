@@ -36,35 +36,35 @@ object RobotContainer {
 
     init { eventLoopContext {
 
-        var recordingPath = "center-2-note.json"
+        var recordingPath = "center-2-note"
         var replayAllowed = true
 
-//        chooser("Auto-Mode"){
-//            default("Do Nothing"){
-//                recordingPath = "do-nothing.json"
-//                replayAllowed = false
-//            }
-//            choice("Movement"){
-//                recordingPath = "movement.json"
-//                replayAllowed = true
-//            }
-//            choice("Center 1-Note"){
-//                recordingPath = "center-1-note.json"
-//                replayAllowed = true
-//            }
-//            choice("Center 2-Note"){
-//                recordingPath = "center-2-note.json"
-//                replayAllowed = true
-//            }
-//            choice("Center 3-Note"){
-//                recordingPath = "center-3-note.json"
-//                replayAllowed = true
-//            }
-//            choice("Center 4-Note"){
-//                recordingPath = "center-4-note.json"
-//                replayAllowed = true
-//            }
-//        }
+        chooser("Auto-Mode"){
+            default("Do Nothing"){
+                recordingPath = "do-nothing"
+                replayAllowed = false
+            }
+            choice("Movement"){
+                recordingPath = "movement"
+                replayAllowed = true
+            }
+            choice("Center 1-Note"){
+                recordingPath = "center-1-note"
+                replayAllowed = true
+            }
+            choice("Center 2-Note"){
+                recordingPath = "center-2-note"
+                replayAllowed = true
+            }
+            choice("Center 3-Note"){
+                recordingPath = "center-3-note"
+                replayAllowed = true
+            }
+            choice("Center 4-Note"){
+                recordingPath = "center-4-note"
+                replayAllowed = true
+            }
+        }
 
         val driver: BetterXboxController
         val manipulator: BetterXboxController
@@ -75,6 +75,7 @@ object RobotContainer {
             replay = AUTONOMOUS and { replayAllowed }
             val trueTeleop = DriverStation::isTeleopEnabled
 
+            replayReady = { false }
             driver = BetterXboxController(0).also {
                 record = trueTeleop and (it.leftBumper) and ::`Recording-Access-Enabled` and !DriverStation::isFMSAttached
             }.replayable("driver")
