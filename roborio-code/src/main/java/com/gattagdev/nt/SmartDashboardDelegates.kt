@@ -36,15 +36,10 @@ inline fun <IN, reified OUT> quickDashboard(
     val prop = builder(trueName, outDefault)
     val prevDefaultName = ".default/${trueName}"
     if(persistent){
-        setPersistent(trueName)
-        setPersistent(prevDefaultName)
         val defProp = builder(prevDefaultName, outDefault)
         val oldDef = defProp.value
         if(oldDef != outDefault) willClear = true
         defProp.value = outDefault
-    } else{
-        clearPersistent(trueName)
-        clearPersistent(prevDefaultName)
     }
 
     if(willClear || !SmartDashboard.containsKey(trueName)){
@@ -53,6 +48,14 @@ inline fun <IN, reified OUT> quickDashboard(
 
     if(prop.value != outDefault){
         Logger.getAnonymousLogger().warning("SmartDashboard key (${trueName}) persistent value (${prop.value}) does not match in code default value (${outDefault})")
+    }
+
+    if(persistent){
+        setPersistent(trueName)
+        setPersistent(prevDefaultName)
+    } else{
+        clearPersistent(trueName)
+        clearPersistent(prevDefaultName)
     }
 
     quickRW(

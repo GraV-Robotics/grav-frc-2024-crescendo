@@ -10,6 +10,7 @@ import com.gattagdev.nt.chooser
 import com.gattagdev.nt.quickDashboard
 import com.gattagdev.units.degrees
 import com.gattagdev.units.inches
+import com.gattagdev.units.rotations
 import edu.wpi.first.math.kinematics.ChassisSpeeds
 import edu.wpi.first.math.trajectory.TrapezoidProfile
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints
@@ -123,7 +124,7 @@ object RobotContainer {
 
                 var unlocked by setOnStart { true }
                 var goal by setOnStart { continuousGyro() }
-                val hasNewInfo = lastTimestamp.hasChanged and last().targets::isNotEmpty and { unlocked }
+                val hasNewInfo = lastTimestamp.hasChanged and { last().targets.isNotEmpty() } and { unlocked }
                 hasNewInfo{ onPeriodic {
                     val target = last().targets[0]
                     goal = gyroHistory(lastTimestamp()) - target.yaw.degrees
@@ -133,8 +134,8 @@ object RobotContainer {
                 val ringTrackKP by quickDashboard(0.0, name="ring-track/kP")
                 val ringTrackKI by quickDashboard(0.0, name="ring-track/kI")
                 val ringTrackKD by quickDashboard(0.0, name="ring-track/kD")
-                val ringTrackMaxVelocity by quickDashboard(0.0, name="ring-track/MaxVelocity")
-                val ringTrackMaxAccel by quickDashboard(0.0, name="ring-track/MaxAccel")
+                val ringTrackMaxVelocity by quickDashboard(0.0, name="ring-track/MaxVelocity"){ rotations }
+                val ringTrackMaxAccel by quickDashboard(0.0, name="ring-track/MaxAccel"){ rotations }
 
                 val constraints = { Constraints(ringTrackMaxVelocity,ringTrackMaxAccel) }
                 val pidController = { State(goal,0.0) }.profiledPID(
