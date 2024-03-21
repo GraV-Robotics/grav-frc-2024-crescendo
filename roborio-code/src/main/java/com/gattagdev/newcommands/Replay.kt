@@ -6,6 +6,7 @@ import com.gattagdev.defered.BS
 import com.gattagdev.internal.builderScope
 import edu.wpi.first.wpilibj.Filesystem
 import edu.wpi.first.wpilibj.Notifier
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -55,6 +56,7 @@ class RecordingLoader(
     val closed: Boolean get() = replayExecutor.isShutdown
     private val replayExecutor = Executors.newSingleThreadExecutor()
 
+    @OptIn(ExperimentalSerializationApi::class)
     private val descriptor = ProtoBuf.decodeFromByteArray(
         RecordingDescriptor.serializer(),
         Files.readAllBytes(descriptorPath)
@@ -68,6 +70,7 @@ class RecordingLoader(
     private val <T: Any> ReplayComponent<T>.loader: ComponentRecordingLoader<T> get() = componentLoaders[this@loader]!! as ComponentRecordingLoader<T>
     private var loadingPart = -1
     private var loadingFrame = -1
+    @OptIn(ExperimentalSerializationApi::class)
     private fun loadPart(partIndex: Int){
         if(partIndex < 0 || partIndex >= descriptor.partDescriptors.size) return
         if(partIndex <= loadingPart) return
@@ -137,7 +140,7 @@ class Recorder(
         fun newFrameBucket(){ frameBucket = ArrayList(frameBucketSize) }
     }
 
-    private val componentRecorders = replayComponents.map { it to Recorder.ComponentRecorder(it) }.toMap()
+    private val componentRecorders = replayComponents.map { it to ComponentRecorder(it) }.toMap()
     private val <T: Any> ReplayComponent<T>.recorder get() = componentRecorders[this]!! as ComponentRecorder<T>
 
     operator fun <T: Any> set(component: ReplayComponent<T>, value: T): Unit{
@@ -224,7 +227,7 @@ inline fun <reified RET> EventLoopContext.replayManager(builder: @EventLoopConte
     var replayReadySupplier: BS? = null
     val components = mutableListOf<ReplayComponent<*>>()
     val ret = builderScope {
-        builder(object: ReplayBuilder{
+        builder(object: ReplayBuilder {
             override var path: () -> Path
                 get() = pathSupplier!!
                 set(value) { tryRun { pathSupplier = value } }
@@ -253,12 +256,17 @@ inline fun <reified RET> EventLoopContext.replayManager(builder: @EventLoopConte
     val replayReady = replayReadySupplier!!
 
 
-
-    addExecutable(object: EventLoopExecutable{
+    var lastMode: EventLoopExecutable? = null
+    addExecutable(object: EventLoopExecutable {
 
         val idleMode = quickExecutable { components.forEach { it.periodic(null) } }
 
-        val recordMode = object: EventLoopExecutable{
+        var lastPath: Path? = null
+        var validPath = false
+
+        var currentMode: EventLoopExecutable = idleMode
+
+        val recordMode = object: EventLoopExecutable {
 
             var recorder: Recorder? = null
             var framesSinceSave = 0
@@ -316,11 +324,6 @@ inline fun <reified RET> EventLoopContext.replayManager(builder: @EventLoopConte
                 loader = null
             }
         }
-
-        var lastPath: Path? = null
-        var validPath = false
-        var lastMode: EventLoopExecutable? = null
-        var currentMode: EventLoopExecutable = idleMode
 
         override fun start() {
             lastPath = null

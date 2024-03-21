@@ -10,10 +10,10 @@ import com.gattagdev.nt.chooser
 import com.gattagdev.nt.quickDashboard
 import com.gattagdev.units.degrees
 import com.gattagdev.units.inches
-import com.gattagdev.units.rotations
-import com.gattagdev.units.toDegrees
 import edu.wpi.first.math.kinematics.ChassisSpeeds
 import edu.wpi.first.math.trajectory.TrapezoidProfile
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints
+import edu.wpi.first.math.trajectory.TrapezoidProfile.State
 import edu.wpi.first.wpilibj.DriverStation
 import org.grav.y2024.subsystems.DriveSubsystem
 import org.grav.y2024.subsystems.DriveSubsystem.driveCommand
@@ -39,28 +39,28 @@ object RobotContainer {
         var recordingPath = "center-2-note"
         var replayAllowed = true
 
-        chooser("Auto-Mode"){
-            default("Do Nothing"){
+        chooser("Auto-Mode") {
+            default("Do Nothing") {
                 recordingPath = "do-nothing"
                 replayAllowed = false
             }
-            choice("Movement"){
+            choice("Movement") {
                 recordingPath = "movement"
                 replayAllowed = true
             }
-            choice("Center 1-Note"){
+            choice("Center 1-Note") {
                 recordingPath = "center-1-note"
                 replayAllowed = true
             }
-            choice("Center 2-Note"){
+            choice("Center 2-Note") {
                 recordingPath = "center-2-note"
                 replayAllowed = true
             }
-            choice("Center 3-Note"){
+            choice("Center 3-Note") {
                 recordingPath = "center-3-note"
                 replayAllowed = true
             }
-            choice("Center 4-Note"){
+            choice("Center 4-Note") {
                 recordingPath = "center-4-note"
                 replayAllowed = true
             }
@@ -76,10 +76,10 @@ object RobotContainer {
             val trueTeleop = DriverStation::isTeleopEnabled
 
             replayReady = { false }
-            driver = BetterXboxController(0).also {
-                record = trueTeleop and (it.leftBumper) and ::`Recording-Access-Enabled` and !DriverStation::isFMSAttached
-            }.replayable("driver")
-            manipulator = BetterXboxController(1).replayable("manipulator")
+            driver = BetterXboxController(0).also { }.replayable("driver")
+            manipulator = BetterXboxController(1).also{
+                record = trueTeleop and {it.povDegrees() != null} and ::`Recording-Access-Enabled` and !DriverStation::isFMSAttached
+            }.replayable("manipulator")
             TELEOPERATED = trueTeleop.replayable("teleop")
         }
 
@@ -106,48 +106,42 @@ object RobotContainer {
         val driverAngle      = { driver.povDegrees()?.let { 180.degrees - it.degrees } }
         val trackNoteInput   = driver.rightTrigger gt 0.25
 
-        val continuousGyro = {DriveSubsystem.measuredAngle}.makeContinuous(-180.degrees, 180.degrees)
+        val continuousGyro   = DriveSubsystem::measuredAngle.makeContinuous(-180.degrees, 180.degrees)
+        val gyroHistory      = continuousGyro maintainHistory 10.0
+
         var alternateRotationInput: Double? = null
         /* -------------------- TELEOP -------------------- */
         TELEOPERATED {
-
             zeroGyroCommand() whileTrue zeroGyroInput
 
-            val frontCamera = PhotonCamera("front-camera")
+            trackNoteInput {
+                val frontCamera = PhotonCamera("front-camera")
+                val last = { frontCamera.latestResult }.checkpoint
+                val lastTimestamp = { last().timestampSeconds }
 
+                val lowerCameraCutoff by quickDashboard(-11.degrees, name="ring-track/cutoff"){ degrees }
 
-            val lowerCameraCutoff by quickDashboard(-11.degrees, name="ring-track/cutoff"){ degrees }
-            val ringTrackKP by quickDashboard(10.0, name="ring-track/kP"){ 10.0 }
-            command{
-                val initialAngle = continuousGyro()
-                var lastRobotAngle = initialAngle
-                var lastTimestamp = frontCamera.latestResult.timestampSeconds
-                var lastCameraAngle = 0.0
-                var unlocked = true
+                var unlocked by setOnStart { true }
+                var goal by setOnStart { continuousGyro() }
+                val hasNewInfo = lastTimestamp.hasChanged and last().targets::isNotEmpty and { unlocked }
+                hasNewInfo{ onPeriodic {
+                    val target = last().targets[0]
+                    goal = gyroHistory(lastTimestamp()) - target.yaw.degrees
+                    if(target.pitch.degrees < lowerCameraCutoff) unlocked = false
+                } }
 
+                val ringTrackKP by quickDashboard(0.0, name="ring-track/kP")
+                val ringTrackKI by quickDashboard(0.0, name="ring-track/kI")
+                val ringTrackKD by quickDashboard(0.0, name="ring-track/kD")
+                val ringTrackMaxVelocity by quickDashboard(0.0, name="ring-track/MaxVelocity")
+                val ringTrackMaxAccel by quickDashboard(0.0, name="ring-track/MaxAccel")
 
-                periodic {
-                    val last = frontCamera.latestResult
-                    if(last.timestampSeconds != lastTimestamp && last.targets!!.isNotEmpty() && unlocked){
-                        lastTimestamp = last.timestampSeconds
-                        lastRobotAngle = continuousGyro()
-                        lastCameraAngle = -last.targets[0].yaw.degrees
-                        if(last.targets[0].pitch.degrees < lowerCameraCutoff) unlocked = false
-                    }
-                    val setpoint = lastRobotAngle + lastCameraAngle
-
-                    val measured = continuousGyro()
-                    val error = setpoint - measured
-
-                    alternateRotationInput = error * ringTrackKP
-                }
-
-                onEnd { alternateRotationInput = null }
-            } whileTrue trackNoteInput
-
-
-            command{
-
+                val constraints = { Constraints(ringTrackMaxVelocity,ringTrackMaxAccel) }
+                val pidController = { State(goal,0.0) }.profiledPID(
+                    {ringTrackKP}, {ringTrackKI}, {ringTrackKD}, constraints, continuousGyro
+                )
+                onPeriodic { alternateRotationInput = pidController() }
+                onStop { alternateRotationInput = null }
             }
 
             driveCommand (fieldRelative = !robotCentric) {

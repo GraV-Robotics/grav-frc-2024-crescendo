@@ -2,7 +2,8 @@ package com.gattagdev.joystick
 
 import com.gattagdev.defered.BS
 import com.gattagdev.defered.DS
-import com.gattagdev.newcommands.*
+import com.gattagdev.newcommands.ReplayBuilder
+import com.gattagdev.newcommands.ReplayComponent
 import kotlinx.serialization.Serializable
 
 class ProxyController(
@@ -48,26 +49,96 @@ class StateReplayController(private val state: () -> ControllerState): BetterXbo
     override val povDegrees: () -> Double? get() = { state().povDegrees }
 }
 
+enum class ButtonKey {
+    A_BUTTON,
+    B_BUTTON,
+    X_BUTTON,
+    Y_BUTTON,
+    LEFT_BUMPER,
+    RIGHT_BUMPER,
+    BACK_BUTTON,
+    START_BUTTON,
+    LEFT_STICK_BUTTON,
+    RIGHT_STICK_BUTTON;
+
+    operator fun invoke(state: Boolean): Int = if(state) 1 shl ordinal else 0
+    operator fun invoke(state: Int): Boolean = state and (1 shl ordinal) != 0
+
+}
+
+internal fun compressAxis(axis: Double): Short = (axis * Short.MAX_VALUE).toInt().toShort()
+internal fun decompressAxis(axis: Short): Double = axis.toDouble() / Short.MAX_VALUE
+internal fun compressPOV(pov: Double?): Short = pov?.toInt()?.toShort() ?: -1
+internal fun decompressPOV(pov: Short): Double? = if(pov.toInt() == -1) null else pov.toDouble()
+
+// TODO Could really use some range validation here
 @Serializable
 data class ControllerState(
-    val xButton: Boolean = false,
-    val aButton: Boolean = false,
-    val bButton: Boolean = false,
-    val yButton: Boolean = false,
-    val leftBumper: Boolean = false,
-    val rightBumper: Boolean = false,
-    val backButton: Boolean = false,
-    val startButton: Boolean = false,
-    val leftStickButton: Boolean = false,
-    val rightStickButton: Boolean = false,
-    val leftTrigger: Double = 0.0,
-    val rightTrigger: Double = 0.0,
-    val leftStickX: Double = 0.0,
-    val leftStickY: Double = 0.0,
-    val rightStickX: Double = 0.0,
-    val rightStickY: Double = 0.0,
-    val povDegrees: Double? = null
-)
+    private val _buttons: Int = 0,
+    private val _leftTrigger: Short = 0,
+    private val _rightTrigger: Short = 0,
+    private val _leftStickX: Short = 0,
+    private val _leftStickY: Short = 0,
+    private val _rightStickX: Short = 0,
+    private val _rightStickY: Short = 0,
+    private val _povDegrees: Short = -1
+) {
+    constructor(
+        xButton: Boolean = false,
+        aButton: Boolean = false,
+        bButton: Boolean = false,
+        yButton: Boolean = false,
+        leftBumper: Boolean = false,
+        rightBumper: Boolean = false,
+        backButton: Boolean = false,
+        startButton: Boolean = false,
+        leftStickButton: Boolean = false,
+        rightStickButton: Boolean = false,
+        leftTrigger: Double = 0.0,
+        rightTrigger: Double = 0.0,
+        leftStickX: Double = 0.0,
+        leftStickY: Double = 0.0,
+        rightStickX: Double = 0.0,
+        rightStickY: Double = 0.0,
+        povDegrees: Double? = null
+    ) : this(
+        _buttons = ButtonKey.A_BUTTON(aButton) +
+                ButtonKey.B_BUTTON(bButton) +
+                ButtonKey.X_BUTTON(xButton) +
+                ButtonKey.Y_BUTTON(yButton) +
+                ButtonKey.LEFT_BUMPER(leftBumper) +
+                ButtonKey.RIGHT_BUMPER(rightBumper) +
+                ButtonKey.BACK_BUTTON(backButton) +
+                ButtonKey.START_BUTTON(startButton) +
+                ButtonKey.LEFT_STICK_BUTTON(leftStickButton) +
+                ButtonKey.RIGHT_STICK_BUTTON(rightStickButton),
+        _leftTrigger = compressAxis(leftTrigger),
+        _rightTrigger = compressAxis(rightTrigger),
+        _leftStickX = compressAxis(leftStickX),
+        _leftStickY = compressAxis(leftStickY),
+        _rightStickX = compressAxis(rightStickX),
+        _rightStickY = compressAxis(rightStickY),
+        _povDegrees = compressPOV(povDegrees)
+    )
+    val aButton get() = ButtonKey.A_BUTTON(_buttons)
+    val bButton get() = ButtonKey.B_BUTTON(_buttons)
+    val xButton get() = ButtonKey.X_BUTTON(_buttons)
+    val yButton get() = ButtonKey.Y_BUTTON(_buttons)
+    val leftBumper get() = ButtonKey.LEFT_BUMPER(_buttons)
+    val rightBumper get() = ButtonKey.RIGHT_BUMPER(_buttons)
+    val backButton get() = ButtonKey.BACK_BUTTON(_buttons)
+    val startButton get() = ButtonKey.START_BUTTON(_buttons)
+    val leftStickButton get() = ButtonKey.LEFT_STICK_BUTTON(_buttons)
+    val rightStickButton get() = ButtonKey.RIGHT_STICK_BUTTON(_buttons)
+    val leftTrigger get() = decompressAxis(_leftTrigger)
+    val rightTrigger get() = decompressAxis(_rightTrigger)
+    val leftStickX get() = decompressAxis(_leftStickX)
+    val leftStickY get() = decompressAxis(_leftStickY)
+    val rightStickX get() = decompressAxis(_rightStickX)
+    val rightStickY get() = decompressAxis(_rightStickY)
+    val povDegrees get() = decompressPOV(_povDegrees)
+
+}
 
 val BetterXboxController.currentState get() = ControllerState(
     xButton = this.xButton(),

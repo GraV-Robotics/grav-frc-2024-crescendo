@@ -4,10 +4,12 @@ import com.gattagdev.defered.BS
 import com.gattagdev.defered.not
 import com.gattagdev.internal.builderScope
 import com.gattagdev.misc.always
+import com.gattagdev.nt.quickRW
 import edu.wpi.first.wpilibj.event.EventLoop
 import edu.wpi.first.wpilibj2.command.Command
 import edu.wpi.first.wpilibj2.command.CommandScheduler
-import kotlin.contracts.ExperimentalContracts
+import kotlin.properties.PropertyDelegateProvider
+import kotlin.reflect.KProperty
 
 
 @Target(AnnotationTarget.TYPE, AnnotationTarget.CLASS, AnnotationTarget.FUNCTION, AnnotationTarget.VALUE_PARAMETER)
@@ -19,6 +21,12 @@ typealias ELC_BODY = @EventLoopContextDSLMarker EventLoopContext.() -> Unit
 @EventLoopContextDSLMarker
 interface EventLoopContext{
     fun addExecutable(executable: EventLoopExecutable)
+
+    fun onStart(executable: EventLoopExecutable.() -> Unit) = addExecutable(quickExecutable(start = executable))
+    fun onPeriodic(executable: EventLoopExecutable.() -> Unit) = addExecutable(quickExecutable(periodic = executable))
+    fun onStop(executable: EventLoopExecutable.() -> Unit) = addExecutable(quickExecutable(stop = executable))
+
+
 
     infix operator fun BS.invoke(body: (@EventLoopContextDSLMarker EventLoopContext).() -> Unit){
         val executables = executablesFromBody(body)
@@ -43,14 +51,14 @@ interface EventLoopContext{
     infix fun Command.onFalse(condition: BS) = onTrue(!condition)
 
 
-    infix fun <T, F: () -> T> F.onChange(changeHandler: @EventLoopContextDSLMarker (T) -> Unit): F{
+    infix fun <T: Any?, F: () -> T> F.onChange(changeHandler: @EventLoopContextDSLMarker (T) -> Unit): F{
         this.onChange{prev, post -> changeHandler(post)}
         return this
     }
-    infix fun <T, F: () -> T> F.onChange(changeHandler: @EventLoopContextDSLMarker (T?, T) -> Unit): F{
+    infix fun <T: Any?, F: () -> T> F.onChange(changeHandler: @EventLoopContextDSLMarker (T?, T) -> Unit): F{
         var first = true
         var last: T? = null
-        addExecutable(object: EventLoopExecutable{
+        addExecutable(object: EventLoopExecutable {
             override fun periodic() {
                 val current = this@onChange()
                 if(first || last != current){
@@ -64,6 +72,7 @@ interface EventLoopContext{
     }
 }
 
+@EventLoopContextDSLMarker
 interface EventLoopExecutable {
     fun start() { }
     fun periodic() { }
@@ -89,7 +98,8 @@ internal class RunAllExecutable(private val executables: List<EventLoopExecutabl
     }
 }
 
-internal class ConditionalExecutable(private val condition: BS, private val executable: EventLoopExecutable): EventLoopExecutable{
+internal class ConditionalExecutable(private val condition: BS, private val executable: EventLoopExecutable):
+    EventLoopExecutable {
     override fun start() = Unit
 
     private var started = false
@@ -110,13 +120,6 @@ internal class ConditionalExecutable(private val condition: BS, private val exec
     }
 }
 
-
-
-
-
-
-
-
 @PublishedApi
 internal inline fun executablesFromBody(body: ELC_BODY): List<EventLoopExecutable>{
     val executables = mutableListOf<EventLoopExecutable>()
@@ -133,45 +136,30 @@ internal inline fun executablesFromBody(body: ELC_BODY): List<EventLoopExecutabl
 
 inline fun eventLoopContext(
     eventLoop: EventLoop = CommandScheduler.getInstance().defaultButtonLoop,
+    period: Double = 0.02,
     body: @EventLoopContextDSLMarker EventLoopContext.() -> Unit
 ){
     val executables = executablesFromBody(body)
     var first = true
     eventLoop.bind {
-        executables.forEach {
-            if(first) it.start()
-            it.periodic()
+        withTimeInfo(ELTimeInfo(period, time)) {
+            executables.forEach {
+                if (first) it.start()
+                it.periodic()
+            }
         }
         first = false
     }
 }
 
-class Flag<T>(private val init: T): () -> T{
-    var value: T = init
 
-    infix fun set(value: T) = command{ periodic { this@Flag.value = value } }
-
-    internal fun reset(){
-        value = init
-    }
-
-    override fun invoke(): T = value
+inline fun <reified T> EventLoopContext.setOnStart(
+    crossinline init: EventLoopExecutable.() -> T
+) = PropertyDelegateProvider { thisRef: Any?, property: KProperty<*> ->
+    var value: T? = null
+    onStart { value = init() }
+    quickRW({ value as T }, { value = it })
 }
-
-fun <T> EventLoopContext.flag(init: T): Flag<T> {
-    val flag = Flag(init)
-    this.addExecutable(object: EventLoopExecutable{
-        override fun start() = Unit
-        override fun periodic() = flag.reset()
-        override fun stop() = Unit
-    })
-    return flag
-}
-
-
-
-
-
 
 @EventLoopContextDSLMarker
 interface SwitchContext {
@@ -181,14 +169,14 @@ interface SwitchContext {
 fun EventLoopContext.switch(body: @EventLoopContextDSLMarker SwitchContext.() -> Unit){
     val cases = mutableListOf<Pair<BS, EventLoopExecutable>>()
     builderScope {
-        val context = object: SwitchContext{
+        val context = object: SwitchContext {
             override fun case(condition: BS, body: (@EventLoopContextDSLMarker EventLoopContext).() -> Unit) { tryRun {
                 cases.add(Pair(condition, RunAllExecutable(executablesFromBody(body))))
             } }
         }
         body(context)
     }
-    cases.add(Pair(always, object: EventLoopExecutable{
+    cases.add(Pair(always, object: EventLoopExecutable {
         override fun start() = Unit
         override fun periodic() = Unit
         override fun stop() = Unit
@@ -223,15 +211,17 @@ fun EventLoopContext.switch(body: @EventLoopContextDSLMarker SwitchContext.() ->
         }
     }
     addExecutable(executable)
-
-
 }
 
-fun quickExecutable(start: () -> Unit = {}, stop: () -> Unit = {}, periodic: () -> Unit = {}): EventLoopExecutable {
+fun quickExecutable(
+    start: EventLoopExecutable.() -> Unit = {},
+    stop: EventLoopExecutable.() -> Unit = {},
+    periodic: EventLoopExecutable.() -> Unit = {}
+): EventLoopExecutable {
     return object: EventLoopExecutable {
-        override fun start() = start()
-        override fun stop() = stop()
-        override fun periodic() = periodic()
+        override fun start() = start(this)
+        override fun stop() = stop(this)
+        override fun periodic() = periodic(this)
     }
 }
 

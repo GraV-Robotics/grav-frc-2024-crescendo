@@ -2,22 +2,7 @@ package com.gattagdev.joystick
 
 import com.gattagdev.defered.BS
 import com.gattagdev.defered.DS
-import com.gattagdev.defered.and
-import com.gattagdev.defered.not
-import com.gattagdev.newcommands.ConditionalExecutable
-import com.gattagdev.newcommands.EventLoopContext
-import com.gattagdev.newcommands.EventLoopExecutable
-import edu.wpi.first.wpilibj.Filesystem
 import edu.wpi.first.wpilibj.XboxController
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.decodeFromJsonElement
-import kotlinx.serialization.json.encodeToJsonElement
-import java.io.File
-import java.io.IOException
-import java.nio.file.Files
-import java.nio.file.Path
 
 interface BetterXboxController {
 
