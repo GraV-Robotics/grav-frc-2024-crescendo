@@ -27,6 +27,13 @@ class ProxyController(
     override val rightStickX: DS get() = { input().rightStickX() }
     override val rightStickY: DS get() = { input().rightStickY() }
     override val povDegrees: () -> Double? get() = { input().povDegrees() }
+
+    override var leftRumble: Double
+        get() = feedback().leftRumble
+        set(value) { feedback().leftRumble = value }
+    override var rightRumble: Double
+        get() = feedback().rightRumble
+        set(value) { feedback().rightRumble = value }
 }
 
 class StateReplayController(private val state: () -> ControllerState): BetterXboxController{
@@ -47,6 +54,14 @@ class StateReplayController(private val state: () -> ControllerState): BetterXbo
     override val rightStickX: DS get() = { state().rightStickX }
     override val rightStickY: DS get() = { state().rightStickY }
     override val povDegrees: () -> Double? get() = { state().povDegrees }
+
+    override var leftRumble: Double
+        get() = 0.0
+        set(value) { }
+
+    override var rightRumble: Double
+        get() = 0.0
+        set(value) { }
 }
 
 enum class ButtonKey {

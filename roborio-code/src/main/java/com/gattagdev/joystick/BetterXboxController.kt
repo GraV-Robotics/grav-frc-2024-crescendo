@@ -2,6 +2,7 @@ package com.gattagdev.joystick
 
 import com.gattagdev.defered.BS
 import com.gattagdev.defered.DS
+import edu.wpi.first.wpilibj.GenericHID
 import edu.wpi.first.wpilibj.XboxController
 
 interface BetterXboxController {
@@ -24,6 +25,9 @@ interface BetterXboxController {
     val rightStickY: DS
     val povDegrees: () -> Double?
 
+    var leftRumble: Double
+    var rightRumble: Double
+
     companion object{
         operator fun invoke(port: Int): BetterXboxController = BetterXboxControllerImpl(port)
     }
@@ -39,6 +43,13 @@ val BetterXboxController.dPadUpRight: BS get() = { povDegrees() == 45.0 }
 val BetterXboxController.dPadDownRight: BS get() = { povDegrees() == 135.0 }
 val BetterXboxController.dPadDownLeft: BS get() = { povDegrees() == 225.0 }
 val BetterXboxController.dPadUpLeft: BS get() = { povDegrees() == 315.0 }
+
+var BetterXboxController.bothRumble: Double
+    get() = (leftRumble + rightRumble)/2
+    set(value) {
+        leftRumble = value
+        rightRumble = value
+    }
 
 internal class BetterXboxControllerImpl(port: Int) : BetterXboxController {
 
@@ -61,6 +72,21 @@ internal class BetterXboxControllerImpl(port: Int) : BetterXboxController {
     override val rightStickX: DS get() = { base.rightX }
     override val rightStickY: DS get() = { base.rightY }
     override val povDegrees: () -> Double? get() = { if(base.pov == -1) null else base.pov.toDouble() }
+
+    var _leftRumble = 0.0
+    var _rightRumble = 0.0
+    override var leftRumble: Double
+        get() = _leftRumble
+        set(value) {
+            _leftRumble = value
+            base.setRumble(GenericHID.RumbleType.kLeftRumble, value)
+        }
+    override var rightRumble: Double
+        get() = _rightRumble
+        set(value) {
+            _rightRumble = value
+            base.setRumble(GenericHID.RumbleType.kRightRumble, value)
+        }
 }
 
 

@@ -2,6 +2,7 @@ package org.grav.y2024
 
 import com.gattagdev.defered.*
 import com.gattagdev.joystick.BetterXboxController
+import com.gattagdev.joystick.bothRumble
 import com.gattagdev.joystick.replayable
 import com.gattagdev.misc.AUTONOMOUS
 import com.gattagdev.misc.always
@@ -11,11 +12,13 @@ import com.gattagdev.nt.quickDashboard
 import com.gattagdev.units.degrees
 import com.gattagdev.units.inches
 import com.gattagdev.units.rotations
+import edu.wpi.first.math.controller.PIDController
 import edu.wpi.first.math.kinematics.ChassisSpeeds
 import edu.wpi.first.math.trajectory.TrapezoidProfile
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints
 import edu.wpi.first.math.trajectory.TrapezoidProfile.State
 import edu.wpi.first.wpilibj.DriverStation
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import org.grav.y2024.subsystems.DriveSubsystem
 import org.grav.y2024.subsystems.DriveSubsystem.driveCommand
 import org.grav.y2024.subsystems.DriveSubsystem.zeroGyroCommand
@@ -110,42 +113,102 @@ object RobotContainer {
         val continuousGyro   = DriveSubsystem::measuredAngle.makeContinuous(-180.degrees, 180.degrees)
         val gyroHistory      = continuousGyro maintainHistory 10.0
 
+
+        var gyroOut by quickDashboard(0.0, persistent = false){ degrees }
+        var historyOut by quickDashboard(0.0, persistent = false){ degrees }
+        onPeriodic { gyroOut = continuousGyro(); historyOut = gyroHistory(1.0) }
+
         var alternateRotationInput: Double? = null
         /* -------------------- TELEOP -------------------- */
         TELEOPERATED {
             zeroGyroCommand() whileTrue zeroGyroInput
+            val frontCamera = PhotonCamera("front-camera")
+//            trackNoteInput {
+//
+//                val last = { frontCamera.latestResult }.checkpoint
+//                val lastTimestamp = { last().timestampSeconds }
+//
+//                val lowerCameraCutoff by quickDashboard(-87.09.degrees, name="ring-track/cutoff"){ degrees }
+//
+//                var unlocked by setOnStart { true }
+//                var goal by setOnStart { continuousGyro() }
+//                val hasNewInfo = lastTimestamp.hasChanged and { last().targets.isNotEmpty() } and { unlocked }
+//                hasNewInfo{ onPeriodic {
+//                    val target = last().targets[0]
+//                    goal = continuousGyro() - target.yaw.degrees
+//                    if(target.pitch.degrees < lowerCameraCutoff) unlocked = false
+//                } }
+//
+//                val ringTrackKP by quickDashboard(10.0, name="ring-track/kP")
+//                val ringTrackKI by quickDashboard(0.0, name="ring-track/kI")
+//                val ringTrackKD by quickDashboard(0.7, name="ring-track/kD")
+//                val ringTrackMaxVelocity by quickDashboard(1.5.rotations, name="ring-track/MaxVelocity"){ rotations }
+//                val ringTrackMaxAccel by quickDashboard(0.75.rotations, name="ring-track/MaxAccel"){ rotations }
+//                var goalOut by quickDashboard(0.0, persistent = false){ degrees }
+//                onPeriodic { goalOut = goal }
+//
+//                val constraints = { Constraints(ringTrackMaxVelocity,ringTrackMaxAccel) }
+////                val pidController = { State(goal,0.0) }.profiledPID(
+////                    {ringTrackKP}, {ringTrackKI}, {ringTrackKD}, constraints, continuousGyro
+////                )
+//                val pidController = { goal }.pid(
+//                    {ringTrackKP},
+//                    {ringTrackKI},
+//                    {ringTrackKD}
+//                ){ continuousGyro() }
+//                onPeriodic { alternateRotationInput = -pidController() }
+//                onStop { alternateRotationInput = null }
+//            }
 
-            trackNoteInput {
-                val frontCamera = PhotonCamera("front-camera")
-                val last = { frontCamera.latestResult }.checkpoint
-                val lastTimestamp = { last().timestampSeconds }
+            val pid = PIDController(10.0, 0.0, 0.0)
+            SmartDashboard.putData("ringTrackPID", pid)
+            val ringTrackKP by quickDashboard(5.0, name="ring-track/kP")
+            val ringTrackKI by quickDashboard(0.1, name="ring-track/kI")
+            val ringTrackKD by quickDashboard(0.0, name="ring-track/kD")
+            val ringTrackCutoff by quickDashboard(-11.0.degrees){ degrees }
+            command{
+                val initialAngle = continuousGyro()
+                var lastGoal = initialAngle
+                var lastTimestamp = frontCamera.latestResult.timestampSeconds
+                var unlocked = true
+                pid.reset()
+                pid.iZone = 15.degrees
+                pid.setTolerance(1.5.degrees)
+                var seesNote = false
 
-                val lowerCameraCutoff by quickDashboard(-11.degrees, name="ring-track/cutoff"){ degrees }
 
-                var unlocked by setOnStart { true }
-                var goal by setOnStart { continuousGyro() }
-                val hasNewInfo = lastTimestamp.hasChanged and { last().targets.isNotEmpty() } and { unlocked }
-                hasNewInfo{ onPeriodic {
-                    val target = last().targets[0]
-                    goal = gyroHistory(lastTimestamp()) - target.yaw.degrees
-                    if(target.pitch.degrees < lowerCameraCutoff) unlocked = false
-                } }
+                periodic {
+//                    pid.p = if(AUTONOMOUS()) 10.0 else 2.0
+                    pid.setPID(ringTrackKP, ringTrackKI, ringTrackKD)
+                    val last = frontCamera.latestResult
+                    if(last.timestampSeconds != lastTimestamp) {
+                        if(last.targets!!.isNotEmpty() && unlocked){
+                            seesNote = true
+                            lastTimestamp = last.timestampSeconds
+                            lastGoal = continuousGyro() - last.targets[0].yaw.degrees
+                            if(last.targets[0].pitch.degrees < ringTrackCutoff) unlocked = false
+                        }else {
+                            seesNote = false
+                        }
+                    }
 
-                val ringTrackKP by quickDashboard(0.0, name="ring-track/kP")
-                val ringTrackKI by quickDashboard(0.0, name="ring-track/kI")
-                val ringTrackKD by quickDashboard(0.0, name="ring-track/kD")
-                val ringTrackMaxVelocity by quickDashboard(0.0, name="ring-track/MaxVelocity"){ rotations }
-                val ringTrackMaxAccel by quickDashboard(0.0, name="ring-track/MaxAccel"){ rotations }
+                    if(!unlocked) driver.bothRumble = 0.0
+                    else if(seesNote == true) driver.bothRumble = 1.0
+                    else driver.bothRumble = 0.25
 
-                val constraints = { Constraints(ringTrackMaxVelocity,ringTrackMaxAccel) }
-                val pidController = { State(goal,0.0) }.profiledPID(
-                    {ringTrackKP}, {ringTrackKI}, {ringTrackKD}, constraints, continuousGyro
-                )
-                onPeriodic { alternateRotationInput = pidController() }
-                onStop { alternateRotationInput = null }
-            }
 
-            driveCommand (fieldRelative = !robotCentric) {
+                    val setpoint = lastGoal
+
+                    val measured = continuousGyro()
+                    val error = setpoint - measured
+
+                    alternateRotationInput = if(unlocked) pid.calculate(measured, setpoint) else 0.0
+                }
+
+                onEnd { alternateRotationInput = null }
+            } whileTrue trackNoteInput
+
+            driveCommand (fieldRelative = !(robotCentric or (trackNoteInput and !AUTONOMOUS))) {
                 ChassisSpeeds(forwardInput(), sideInput(), alternateRotationInput ?: rotationInput())
             } whileTrue always
 

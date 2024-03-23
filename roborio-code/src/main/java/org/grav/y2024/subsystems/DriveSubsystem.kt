@@ -23,7 +23,7 @@ object DriveSubsystem: BetterSubsystem() {
     val swerveDrive = SwerveParser(File(Filesystem.getDeployDirectory(), "swerve")).createSwerveDrive(trueRobotMaxSpeed)!!
 
     val wheelDiameter by quickDashboard(3.0.inches) { inches }
-    val isOpenLoop by quickDashboard(false)
+    val isOpenLoop by quickDashboard(false, persistent = false)
     val cosineCompensator by quickDashboard(true)
     val headingCorrection by quickDashboard(false)
     val velocityCorrection by quickDashboard(true)

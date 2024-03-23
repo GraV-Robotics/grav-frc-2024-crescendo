@@ -4,6 +4,7 @@ import com.gattagdev.defered.BS
 import com.gattagdev.defered.DS
 import com.gattagdev.pid.PIDConfig
 import edu.wpi.first.math.MathUtil
+import edu.wpi.first.math.controller.PIDController
 import edu.wpi.first.math.controller.ProfiledPIDController
 import edu.wpi.first.math.trajectory.TrapezoidProfile
 import kotlin.math.absoluteValue
@@ -32,6 +33,35 @@ val <T> (() -> T).hasChanged: BS get(){
     return { hasChanged }
 }
 
+
+context(EventLoopContext)
+fun DS.pid(
+    measurement: DS,
+    kp: DS = {0.0},
+    kd: DS = {0.0},
+    ki: DS = {0.0},
+    iZone: DS = { Double.MAX_VALUE },
+    tolerance: DS = { 0.05 }
+): DS {
+    val goal = this@pid
+    var output = 0.0
+    lateinit var pidController : PIDController
+    onStart {
+        pidController = PIDController(
+            0.0,
+            0.0,
+            0.0,
+            period
+        )
+    }
+    onPeriodic {
+        pidController.setPID(kp(), kd(), ki())
+        pidController.iZone = iZone()
+        pidController.setTolerance(tolerance())
+        output = pidController.calculate(measurement(), goal())
+    }
+    return { output }
+}
 context(EventLoopContext)
 fun (() -> TrapezoidProfile.State).profiledPID(
     kp: DS = {0.0},
