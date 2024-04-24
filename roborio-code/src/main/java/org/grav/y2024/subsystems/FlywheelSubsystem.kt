@@ -23,7 +23,7 @@ object FlywheelSubsystem : SubsystemBase() {
 
     private var speakerSpeed by quickDashboard(1500.0)
 
-    private var intakeSpeed by quickDashboard(500.0)
+    private var intakeSpeed by quickDashboard(-500.0)
 
     private var lowerAmpSpeed by quickDashboard(275.0)
     private var upperAmpSpeed by quickDashboard(1650.0)

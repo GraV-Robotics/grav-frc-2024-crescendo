@@ -100,8 +100,8 @@ object RobotContainer {
         val extendInput      = manipulator.leftBumper
         val retractInput     = manipulator.rightBumper
 
-        val driveSpeed       = { DriveSubsystem.trueRobotMaxSpeed }
-        val rotationRate     = { DriveSubsystem.robotMaxRotationRate }
+        val driveSpeed       = { 1.5 }
+        val rotationRate     = { 0.6 }
         val deadband         = 0.05
 
         val forwardInput     = driver.leftStickY  deadBand deadband times driveSpeed
