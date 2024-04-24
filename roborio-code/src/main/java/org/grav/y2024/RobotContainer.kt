@@ -22,6 +22,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard
 import org.grav.y2024.subsystems.DriveSubsystem
 import org.grav.y2024.subsystems.DriveSubsystem.driveCommand
 import org.grav.y2024.subsystems.DriveSubsystem.zeroGyroCommand
+import org.grav.y2024.subsystems.FlywheelSubsystem
 import org.grav.y2024.subsystems.FlywheelSubsystem.ampCommand
 import org.grav.y2024.subsystems.FlywheelSubsystem.speakerCommand
 import org.grav.y2024.subsystems.FlywheelSubsystem.waitForSetpointCommand
@@ -87,11 +88,12 @@ object RobotContainer {
             TELEOPERATED = trueTeleop.replayable("teleop")
         }
 
-        val intakeInput      = manipulator.leftTrigger gt 0.5
+        val intakeInput      = manipulator.leftBumper
         val reverseInput     = manipulator.xButton
-        val speakerSpinInput = manipulator.aButton
-        val ampSpinInput     = manipulator.yButton
-        val shootInput       = manipulator.rightTrigger gt 0.5
+        val speakerSpinInput = driver.aButton
+        val ampSpinInput     = driver.yButton
+        val shootInput       = driver.rightBumper
+        val topIntakeInput    = driver.leftBumper
 
         val climbingPos      = 12.0.inches
         val retractedPos     = 0.0.inches
@@ -215,6 +217,9 @@ object RobotContainer {
             switch {
                 case(reverseInput) {
                     IntakeSubsystem.reverseCommand() * TriggerSubsystem.reverseCommand() whileTrue always
+                }
+                case(topIntakeInput) {
+                    TriggerSubsystem.reverseCommand() * FlywheelSubsystem.intakeCommand() whileTrue always
                 }
                 case(always) {
                     IntakeSubsystem.intakeCommand() whileTrue intakeInput

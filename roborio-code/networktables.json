@@ -1,1 +1,322 @@
-[]
+[
+  {
+    "name": "/SmartDashboard/.default/DriveSubsystem/robotMaxRotationRate",
+    "type": "double",
+    "value": 1.8,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/SmartDashboard/DriveSubsystem/robotMaxRotationRate",
+    "type": "double",
+    "value": 1.8,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/SmartDashboard/.default/DriveSubsystem/wheelDiameter",
+    "type": "double",
+    "value": 2.9999999999999996,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/SmartDashboard/DriveSubsystem/wheelDiameter",
+    "type": "double",
+    "value": 2.9999999999999996,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/SmartDashboard/.default/DriveSubsystem/cosineCompensator",
+    "type": "boolean",
+    "value": true,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/SmartDashboard/DriveSubsystem/cosineCompensator",
+    "type": "boolean",
+    "value": true,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/SmartDashboard/.default/DriveSubsystem/headingCorrection",
+    "type": "boolean",
+    "value": false,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/SmartDashboard/DriveSubsystem/headingCorrection",
+    "type": "boolean",
+    "value": false,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/SmartDashboard/.default/DriveSubsystem/velocityCorrection",
+    "type": "boolean",
+    "value": true,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/SmartDashboard/DriveSubsystem/velocityCorrection",
+    "type": "boolean",
+    "value": true,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/SmartDashboard/.default/DriveSubsystem/angleJoyStickRadiusDeadband",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/SmartDashboard/DriveSubsystem/angleJoyStickRadiusDeadband",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/SmartDashboard/.default/DriveSubsystem/headingKP",
+    "type": "double",
+    "value": 0.4,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/SmartDashboard/DriveSubsystem/headingKP",
+    "type": "double",
+    "value": 0.4,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/SmartDashboard/.default/DriveSubsystem/headingKI",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/SmartDashboard/DriveSubsystem/headingKI",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/SmartDashboard/.default/DriveSubsystem/headingKD",
+    "type": "double",
+    "value": 0.01,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/SmartDashboard/DriveSubsystem/headingKD",
+    "type": "double",
+    "value": 0.01,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/SmartDashboard/.default/ring-track/cutoff",
+    "type": "double",
+    "value": -87.09,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/SmartDashboard/ring-track/cutoff",
+    "type": "double",
+    "value": -87.09,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/SmartDashboard/.default/ring-track/kP",
+    "type": "double",
+    "value": 10.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/SmartDashboard/ring-track/kP",
+    "type": "double",
+    "value": 10.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/SmartDashboard/.default/ring-track/kI",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/SmartDashboard/ring-track/kI",
+    "type": "double",
+    "value": 0.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/SmartDashboard/.default/ring-track/kD",
+    "type": "double",
+    "value": 0.7,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/SmartDashboard/ring-track/kD",
+    "type": "double",
+    "value": 0.7,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/SmartDashboard/.default/ring-track/MaxVelocity",
+    "type": "double",
+    "value": 1.5,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/SmartDashboard/ring-track/MaxVelocity",
+    "type": "double",
+    "value": 1.5,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/SmartDashboard/.default/ring-track/MaxAccel",
+    "type": "double",
+    "value": 0.75,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/SmartDashboard/ring-track/MaxAccel",
+    "type": "double",
+    "value": 0.75,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/SmartDashboard/.default/FlywheelSubsystem/speakerSpeed",
+    "type": "double",
+    "value": 3250.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/SmartDashboard/FlywheelSubsystem/speakerSpeed",
+    "type": "double",
+    "value": 3250.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/SmartDashboard/.default/FlywheelSubsystem/lowerAmpSpeed",
+    "type": "double",
+    "value": 275.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/SmartDashboard/FlywheelSubsystem/lowerAmpSpeed",
+    "type": "double",
+    "value": 275.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/SmartDashboard/.default/FlywheelSubsystem/upperAmpSpeed",
+    "type": "double",
+    "value": 1650.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/SmartDashboard/FlywheelSubsystem/upperAmpSpeed",
+    "type": "double",
+    "value": 1650.0,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/SmartDashboard/.default/FlywheelSubsystem/mainFF",
+    "type": "double",
+    "value": 0.00205,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/SmartDashboard/FlywheelSubsystem/mainFF",
+    "type": "double",
+    "value": 0.00205,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/SmartDashboard/.default/FlywheelSubsystem/secondFF",
+    "type": "double",
+    "value": 4e-05,
+    "properties": {
+      "persistent": true
+    }
+  },
+  {
+    "name": "/SmartDashboard/FlywheelSubsystem/secondFF",
+    "type": "double",
+    "value": 4e-05,
+    "properties": {
+      "persistent": true
+    }
+  }
+]

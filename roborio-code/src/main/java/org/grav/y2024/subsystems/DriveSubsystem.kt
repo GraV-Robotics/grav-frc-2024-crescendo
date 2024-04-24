@@ -17,8 +17,8 @@ typealias CSS = () -> ChassisSpeeds
 
 
 object DriveSubsystem: BetterSubsystem() {
-    val trueRobotMaxSpeed = 4.46
-    val robotMaxRotationRate by quickDashboard(1.8.rotations){ rotations }
+    val trueRobotMaxSpeed = 1.5
+    val robotMaxRotationRate by quickDashboard(0.6.rotations){ rotations }
 
     val swerveDrive = SwerveParser(File(Filesystem.getDeployDirectory(), "swerve")).createSwerveDrive(trueRobotMaxSpeed)!!
 

@@ -21,7 +21,9 @@ object FlywheelSubsystem : SubsystemBase() {
     private val upperMotor = BrushlessCANSparkMax(20)
     private val lowerMotor = BrushlessCANSparkMax(21)
 
-    private var speakerSpeed by quickDashboard(3250.0)
+    private var speakerSpeed by quickDashboard(1500.0)
+
+    private var intakeSpeed by quickDashboard(500.0)
 
     private var lowerAmpSpeed by quickDashboard(275.0)
     private var upperAmpSpeed by quickDashboard(1650.0)
@@ -91,6 +93,8 @@ object FlywheelSubsystem : SubsystemBase() {
 
     fun ampCommand() = runCommand( ::lowerAmpSpeed, ::upperAmpSpeed)
     fun speakerCommand() = runCommand { speakerSpeed }
+
+    fun intakeCommand() = runCommand { intakeSpeed }
 
     fun waitForSetpointCommand() = command {
         finish { isAtSetpoint }
